@@ -275,7 +275,7 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 <header>
   <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.8</span>
+  <span class="tag">v0.9</span>
   <span class="conn" id="conn" hidden></span>
   <button class="primary newgame" id="btnNewTop">Новая игра</button>
 </header>
@@ -374,6 +374,7 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 
 <div class="modal" id="modal" hidden><div class="dialog" id="dialog" role="dialog" aria-modal="true"></div></div>
 
+<!--@TG@-->
 <script>
 /*@CORE@*/
 </script>
@@ -448,7 +449,9 @@ function update(newV,events){
   if(!V.over)resultsShown=false;
   events.forEach(e=>{
     const p=V.players[e.pi];
-    if(e.type==="claim"){freshTrack={id:e.track,ts:Date.now()};const t=tracks[e.track];toast(p,`строит ${cities[t.a].n} — ${cities[t.b].n}: ${t.cars} ваг., +${e.pts}`)}
+    if(e.type==="turn"&&e.pi===V.me&&V.phase==="play")haptic("turn");
+    if(e.pi===V.me&&e.type==="draw")haptic("tap");
+    if(e.type==="claim"){if(e.pi===V.me)haptic("ok");freshTrack={id:e.track,ts:Date.now()};const t=tracks[e.track];toast(p,`строит ${cities[t.a].n} — ${cities[t.b].n}: ${t.cars} ваг., +${e.pts}`)}
     else if(e.type==="tickets"&&!e.start)toast(p,`берёт маршруты: оставляет ${e.kept} из ${e.offered}`);
     else if(e.type==="draw"&&e.pi!==V.me)toast(p,e.src==="market"&&e.card==="loco"?"берёт тепловоз с рынка":"берёт карты");
     else if(e.type==="final")toast(p,"— последний круг: у всех по одному ходу");
@@ -514,13 +517,31 @@ function OnlineSession(code,token){
   return s;
 }
 function setConn(ok){const c=$("conn");if(!c)return;c.hidden=!S||S.kind!=="online";c.textContent=ok?"в сети":"нет связи…";c.className="conn"+(ok?"":" off")}
+// ----- Telegram Mini App -----
+const TG=window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initData?window.Telegram.WebApp:null;
+function tgInit(){
+  if(!TG)return;
+  document.documentElement.classList.add("tg");
+  try{TG.ready();TG.expand();if(TG.isVersionAtLeast&&TG.isVersionAtLeast("7.7"))TG.disableVerticalSwipes()}catch(e){}
+  const theme=()=>{document.documentElement.dataset.theme=TG.colorScheme==="dark"?"dark":"light";
+    try{const bg=getComputedStyle(document.body).backgroundColor;TG.setHeaderColor(bg);TG.setBackgroundColor(bg)}catch(e){}};
+  theme();TG.onEvent("themeChanged",theme);TG.onEvent("viewportChanged",()=>layout());
+}
+const tgName=()=>{const u=TG&&TG.initDataUnsafe&&TG.initDataUnsafe.user;return u?[u.first_name,u.last_name].filter(Boolean).join(" ").slice(0,24):""};
+const tgStartRoom=()=>{const m=/^room-(\d{4,6})$/.exec((TG&&TG.initDataUnsafe&&TG.initDataUnsafe.start_param)||"");return m?m[1]:null};
+function haptic(kind){try{if(!TG)return;if(kind==="ok")TG.HapticFeedback.notificationOccurred("success");else if(kind==="turn")TG.HapticFeedback.impactOccurred("medium");else TG.HapticFeedback.selectionChanged()}catch(e){}}
+// разрешение боту писать «Ваш ход» — спрашиваем один раз
+function askWriteAccess(){if(!TG||store.get("sasovo:wa"))return;store.set("sasovo:wa","1");try{TG.requestWriteAccess&&TG.requestWriteAccess()}catch(e){}}
+const shareUrl=link=>`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Сыграем в «Дорогу в Сасово»? Заходи в мою комнату.")}`;
 async function apiPost(path,body){
+  if(TG)body={...body,initData:TG.initData};
   try{const r=await fetch(API+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
     const j=await r.json().catch(()=>({}));return r.ok?j:{error:j.error||"Сервер не ответил."}}
   catch(e){return {error:"Нет связи с сервером."}}
 }
 function startLocal(cfg){if(S&&S.close)S.close();location.hash="";S=LocalSession(cfg);resultsShown=false;S.push([])}
 function startOnline(code,token){
+  askWriteAccess();
   if(S&&S.close)S.close();store.set("sasovo:room:"+code,token);location.hash="room-"+code;
   V=null;resultsShown=false;S=OnlineSession(code,token);S.connect();setConn(true);render();
 }
@@ -848,7 +869,7 @@ function closeModal(){$("modal").hidden=true;lobbyOpen=false;render();if(V)after
 
 function showSetup(){
   const def=[["Игрок 1",false],["Бот Ока",true],["Бот Клязьма",true],["Игрок 4",false]];
-  const myName=store.get("sasovo:name")||"";
+  const myName=store.get("sasovo:name")||tgName();
   openModal(`<h3>Новая игра</h3>
    <p>Соединяйте города из своих маршрутов. От Москвы до Сасово ведут три пути: основная магистраль, запасной путь и северный ход через Владимир.</p>
    <div class="tabs" role="tablist"><button role="tab" id="mLocal" aria-selected="true">На этом устройстве</button><button role="tab" id="mOnline" aria-selected="false">Онлайн с друзьями</button></div>
@@ -869,6 +890,7 @@ function showSetup(){
   rows();$("sN").onchange=rows;
   const tab=on=>{$("mLocal").setAttribute("aria-selected",!on);$("mOnline").setAttribute("aria-selected",on);$("pLocal").hidden=on;$("pOnline").hidden=!on};
   $("mLocal").onclick=()=>tab(false);$("mOnline").onclick=()=>tab(true);
+  if(TG&&onlineAvailable)tab(true);
   if(!onlineAvailable){$("oCreate").disabled=true;$("oNote").textContent="Онлайн-игра работает на сайте игры, когда на сервере запущен игровой сервер. Здесь он недоступен."}
   $("sGo").onclick=()=>{const n=+$("sN").value;const cfg=[];for(let i=0;i<n;i++)cfg.push({name:$("sName"+i).value.trim()||"Игрок "+(i+1),bot:$("sBot"+i).checked});
     $("modal").hidden=true;startLocal(cfg)};
@@ -877,7 +899,7 @@ function showSetup(){
     if(j.error){$("oErr").textContent=j.error;return}$("modal").hidden=true;startOnline(j.code,j.token)};
 }
 function showJoin(code){
-  const myName=store.get("sasovo:name")||"";
+  const myName=store.get("sasovo:name")||tgName();
   openModal(`<h3>Комната ${esc(code)}</h3><p>Вас пригласили в игру «Дорога в Сасово». Как вас подписать?</p>
    <label class="row">Ваше имя: <input type="text" id="jName" maxlength="24" value="${esc(myName)}"></label>
    <div class="row"><button class="primary" id="jGo">Войти в комнату</button><button id="jCancel">Своя игра</button><span class="status" id="jErr"></span></div>`);
@@ -893,6 +915,8 @@ function showLobby(s){
   const html=`<h3>Комната ${esc(L.code)}</h3>
    <p>Отправьте друзьям ссылку. Можно играть вдвоём, втроём или вчетвером, свободные места можно отдать ботам.</p>
    <div class="row"><input type="text" id="lLink" readonly value="${esc(link)}" style="flex:1;min-width:0"><button id="lCopy">Скопировать</button></div>
+   ${L.tgInvite?(TG?`<div class="row"><button class="primary" id="lTg">Пригласить из Telegram</button></div>`
+     :`<div class="row"><a href="${esc(shareUrl(L.tgInvite))}" target="_blank" rel="noopener">Пригласить через Telegram</a></div>`):""}
    <div class="players">${L.seats.map((q,i)=>`<div class="pl"><i style="background:${PLAYER_COLORS[i]}"></i>
      <span>${esc(q.name)}${i===L.you?" (вы)":""}${i===0?" · создатель":""}${q.bot?" · бот":""}</span>
      <span class="num">${q.bot?"":q.online?"в сети":"не в сети"}</span><span></span>
@@ -903,6 +927,7 @@ function showLobby(s){
    :`<p class="status">Ждём, пока ${esc(host.name)} начнёт игру.</p>`}
    <div class="row"><button id="lLeave">Выйти из комнаты</button></div>`;
   openModal(html);lobbyOpen=true;
+  if($("lTg"))$("lTg").onclick=()=>{try{TG.openTelegramLink(shareUrl(L.tgInvite))}catch(e){}};
   $("lCopy").onclick=()=>{const i=$("lLink");navigator.clipboard?navigator.clipboard.writeText(i.value).then(()=>{$("lCopy").textContent="Скопировано"},()=>{i.select()}):i.select()};
   if(L.isHost){$("lBot").onclick=()=>s.post("bot",{});$("lStart").onclick=()=>s.post("start",{});
     $("dialog").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>s.post("remove",{seat:+b.dataset.rm}))}
@@ -1153,12 +1178,16 @@ $("modal").addEventListener("keydown",e=>{if(e.key==="Escape"&&$("pCancel"))clos
 // =====================================================================
 // BOOT
 // =====================================================================
+tgInit();
 if(isMobile()){side.classList.add("collapsed");side.dataset.init=1}
 computeFull();drawGeo();addGrain();layout();fit();renderMapTab();renderRules();render();
 function routeFromHash(){
-  const m=/^#room-(\d{4,6})$/.exec(location.hash);if(!m||!onlineAvailable)return false;
-  if(S&&S.kind==="online"&&S.code===m[1])return true;
-  const tok=store.get("sasovo:room:"+m[1]);if(tok)startOnline(m[1],tok);else showJoin(m[1]);return true;
+  const m=/^#room-(\d{4,6})$/.exec(location.hash),code=m?m[1]:tgStartRoom();if(!code||!onlineAvailable)return false;
+  if(S&&S.kind==="online"&&S.code===code)return true;
+  const tok=store.get("sasovo:room:"+code);if(tok){startOnline(code,tok);return true}
+  if(TG&&tgName()){apiPost(`/rooms/${code}/join`,{name:tgName()}).then(j=>{if(!j.error){startOnline(code,j.token);return}
+    openModal(`<h3>Комната ${esc(code)}</h3><p>${esc(j.error)}</p><div class="row"><button class="primary" id="eBack">Своя игра</button></div>`);$("eBack").onclick=()=>{location.hash="";showSetup()}});return true}
+  showJoin(code);return true;
 }
 checkOnline().then(()=>{if(!routeFromHash())showSetup()});
 window.addEventListener("hashchange",routeFromHash);

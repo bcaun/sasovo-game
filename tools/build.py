@@ -25,8 +25,10 @@ open(os.path.join(ROOT, "server", "core.js"), "w", encoding="utf8").write(
 
 page = open(os.path.join(HERE, "template.html"), encoding="utf8").read().replace("/*@CORE@*/", core)
 
+# превью-артефакт не может грузить скрипты с telegram.org, туда он не нужен
 if "--artifact" in sys.argv:
-    open(sys.argv[sys.argv.index("--artifact") + 1], "w", encoding="utf8").write(page)
+    open(sys.argv[sys.argv.index("--artifact") + 1], "w", encoding="utf8").write(page.replace("<!--@TG@-->\n", ""))
+page = page.replace("<!--@TG@-->", '<script src="https://telegram.org/js/telegram-web-app.js"></script>')
 
 head, body = page.split("<header>", 1)
 head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")

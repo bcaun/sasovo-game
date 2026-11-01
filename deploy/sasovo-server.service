@@ -10,6 +10,8 @@ ExecStart=/usr/bin/env node server.js
 Environment=PORT=8787
 Environment=HOST=127.0.0.1
 Environment=DATA_DIR=/var/lib/sasovo-server
+# токен бота и адрес игры (создаёт deploy/setup-telegram.sh); без файла Telegram просто выключен
+EnvironmentFile=-/etc/sasovo-server.env
 StateDirectory=sasovo-server
 DynamicUser=yes
 Restart=always

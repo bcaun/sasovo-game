@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const Core = require("./core.js");
+const TG = require("./telegram.js");
 
 const PORT = Number(process.env.PORT) || 8787;
 const HOST = process.env.HOST || "127.0.0.1";
@@ -55,13 +56,32 @@ const isOnline = (room, seat) => [...room.conns].some(c => seatOf(room, c.token)
 
 function lobbyFor(room, seat) {
   return {
-    code: room.code, you: seat, isHost: seat === 0, started: !!room.game,
+    code: room.code, you: seat, isHost: seat === 0, started: !!room.game, tgInvite: TG.appLink(room.code),
     seats: room.seats.map((s, i) => ({ name: s.name, bot: s.bot, online: s.bot || isOnline(room, i) })),
   };
 }
 function send(conn, msg) { conn.res.write(`data: ${JSON.stringify(msg)}\n\n`); }
+// уведомления в Telegram тем, кто сейчас не в игре
+function notifyEvents(room, events) {
+  if (!TG.enabled || !events || !events.length) return;
+  const ping = (i, text, button) => {
+    const s = room.seats[i];
+    if (!s || s.bot || !s.tgId || isOnline(room, i)) return;
+    if (s.lastNotify && Date.now() - s.lastNotify < 15000) return;
+    s.lastNotify = Date.now();
+    TG.notify(s.tgId, text, room.code, button);
+  };
+  for (const e of events) {
+    if (e.type === "turn") ping(e.pi, `Ваш ход в «Дорога в Сасово», комната ${room.code}.`, "Сделать ход");
+    if (e.type === "over" && room.game && room.game.results) {
+      const w = room.game.results[0];
+      room.seats.forEach((_, i) => { room.seats[i].lastNotify = 0; ping(i, `Партия в комнате ${room.code} окончена. Победитель: ${w.name}, ${w.total} очков.`, "Посмотреть итоги"); });
+    }
+  }
+}
 function broadcast(room, events) {
   room.touched = Date.now();
+  notifyEvents(room, events);
   for (const conn of [...room.conns]) {
     const seat = seatOf(room, conn.token);
     if (seat < 0) { send(conn, { error: "Вас убрали из комнаты." }); conn.res.end(); room.conns.delete(conn); continue; }
@@ -118,14 +138,16 @@ async function handle(req, res) {
   const parts = url.pathname.replace(/^\/api\/?/, "").split("/").filter(Boolean);
 
   if (req.method === "GET" && parts[0] === "health") return json(res, 200, { ok: true, rooms: rooms.size });
+  if (req.method === "GET" && parts[0] === "config") return json(res, 200, { telegram: TG.enabled, bot: TG.BOT_USERNAME, app: TG.APP_NAME, appLink: TG.appLink("") });
 
   // создать комнату
   if (req.method === "POST" && parts.length === 1 && parts[0] === "rooms") {
     const body = await readBody(req);
-    const name = cleanName(body.name);
+    const tg = TG.verifyInitData(body.initData);
+    const name = cleanName(body.name) || (tg && cleanName(tg.name));
     if (!name) return json(res, 400, { error: "Введите имя." });
     const code = newCode(), token = newToken();
-    rooms.set(code, { code, created: Date.now(), touched: Date.now(), seats: [{ name, bot: false, token }], game: null, conns: new Set(), botTimer: null });
+    rooms.set(code, { code, created: Date.now(), touched: Date.now(), seats: [{ name, bot: false, token, tgId: tg ? tg.id : null }], game: null, conns: new Set(), botTimer: null });
     save();
     return json(res, 200, { code, token });
   }
@@ -154,12 +176,15 @@ async function handle(req, res) {
   const body = await readBody(req);
 
   if (cmd === "join") {
-    const name = cleanName(body.name);
+    const tg = TG.verifyInitData(body.initData);
+    // тот же человек из Telegram возвращается на своё место, даже если игра уже идёт
+    if (tg) { const mine = room.seats.find(x => !x.bot && x.tgId === tg.id); if (mine) return json(res, 200, { token: mine.token }); }
+    const name = cleanName(body.name) || (tg && cleanName(tg.name));
     if (!name) return json(res, 400, { error: "Введите имя." });
     if (room.game) return json(res, 409, { error: "Игра в этой комнате уже началась." });
     if (room.seats.length >= MAX_SEATS) return json(res, 409, { error: "В комнате уже 4 игрока." });
     const token = newToken();
-    room.seats.push({ name, bot: false, token });
+    room.seats.push({ name, bot: false, token, tgId: tg ? tg.id : null });
     broadcast(room, []); save();
     return json(res, 200, { token });
   }
@@ -202,6 +227,7 @@ async function handle(req, res) {
     if (room.seats.length < 2) return json(res, 409, { error: "Нужно минимум 2 игрока." });
     const r = Core.createGame(room.seats.map(s => ({ name: s.name, bot: s.bot })));
     room.game = r.G;
+    room.seats.forEach((x, i) => { if (!x.bot && x.tgId && !isOnline(room, i)) TG.notify(x.tgId, `Игра в комнате ${room.code} началась. Выберите стартовые маршруты.`, room.code, "Выбрать маршруты"); });
     broadcast(room, r.events); scheduleBot(room);
   } else return json(res, 404, { error: "Неизвестная команда." });
   broadcast(room, []); save();
@@ -215,6 +241,7 @@ const server = http.createServer((req, res) => {
 });
 
 load();
+TG.start();
 for (const room of rooms.values()) scheduleBot(room);
 setInterval(() => {
   const now = Date.now();
