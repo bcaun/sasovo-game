@@ -40,7 +40,20 @@ h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,28px
 .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:2px 7px;border-radius:3px;color:var(--muted)}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px;align-items:start}
 @media (max-width:980px){.wrap{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:600px){.board{height:min(72vh,560px)}}
+#dock{display:none}
+.dock-handle{align-self:center;width:72px;height:22px;border:none;background:none;padding:0;display:flex;align-items:center;justify-content:center}
+.dock-handle span{width:42px;height:5px;border-radius:3px;background:var(--line)}
+.dock-turn{display:flex;justify-content:space-between;gap:8px;align-items:baseline;min-width:0}
+.dock-turn b{font-family:var(--font-display);font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-turn .num{color:var(--muted);font-size:12px;white-space:nowrap}
+.cards.mini{flex-wrap:nowrap;overflow-x:auto;gap:5px;padding:2px 1px 4px;scrollbar-width:none;min-height:41px;align-items:center}
+.cards.mini::-webkit-scrollbar{display:none}
+.cards.mini .card{width:50px;height:35px;flex:none}
+.cards.mini .card b{font-size:11px;padding:0 3px;right:2px;bottom:2px}
+.cards.mini .status{font-size:12.5px;white-space:nowrap}
+.dock-actions{display:flex;gap:6px}
+.dock-actions button{flex:1;padding:8px 6px}
+
 .board{position:relative;background:var(--paperOut);border:1px solid var(--line);border-radius:6px;overflow:hidden;height:clamp(460px,86vh,1000px);touch-action:none}
 svg#map{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 svg#map.panning{cursor:grabbing}
@@ -229,12 +242,40 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 .city.exit text{font-style:italic;font-weight:400;fill:var(--mapMuted)}
 .nolabels .city text{display:none}
 @media (prefers-reduced-motion:no-preference){.trk .car{transition:opacity .2s}}
+/* телефон: правила идут последними, чтобы перекрыть общие */
+@media (max-width:760px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{padding:0}
+  header{padding:calc(6px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px));margin:0;gap:8px;flex-wrap:nowrap;align-items:center}
+  header .sub,header .tag{display:none}
+  h1{font-size:19px;white-space:nowrap}
+  .newgame{padding:5px 10px;font-size:13px}
+  .wrap{display:block}
+  .board{height:60vh;border-radius:0;border-left:0;border-right:0}
+  aside#side{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--panel);border-top:1px solid var(--line);border-radius:14px 14px 0 0;
+    box-shadow:0 -6px 20px rgba(0,0,0,.18);max-height:86dvh;overflow-y:auto;overscroll-behavior:contain;gap:10px;
+    padding:0 max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+  aside#side.collapsed>:not(#dock){display:none}
+  #dock{display:flex;flex-direction:column;gap:5px;position:sticky;top:0;background:var(--panel);padding-bottom:6px;z-index:1}
+  #secMarket,#secHand{display:none}
+  #paneGame>.sec{margin-top:10px!important}
+  .sec{padding:10px 12px}
+  .zoom{right:8px;top:8px}
+  .zoom button{width:40px;height:40px}
+  .bplayers{left:8px;right:auto;top:8px;flex-direction:row;flex-wrap:wrap;align-items:flex-start;max-width:calc(100% - 64px)}
+  .bplayers div{font-size:12px;padding:1px 6px}
+  .toast{top:auto;bottom:40px;max-width:calc(100% - 24px);font-size:13px}
+  .hint{font-size:11.5px;left:8px;bottom:6px;right:56px;padding:3px 7px}
+  .modal{align-items:flex-end;padding:0}
+  .dialog{width:100%;max-height:90dvh;border-radius:14px 14px 0 0;
+    padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+}
 </style>
 
 <header>
   <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.7.1</span>
+  <span class="tag">v0.8</span>
   <span class="conn" id="conn" hidden></span>
   <button class="primary newgame" id="btnNewTop">Новая игра</button>
 </header>
@@ -256,7 +297,14 @@ table.res th:first-child,table.res td:first-child{text-align:left}
     <div class="toast" id="toast" hidden></div>
   </div>
 
-  <aside>
+  <aside id="side">
+    <div id="dock">
+      <button id="dockToggle" class="dock-handle" aria-expanded="false" aria-label="Развернуть панель"><span></span></button>
+      <div class="dock-turn"><b id="mTurn">—</b><span id="mInfo" class="num"></span></div>
+      <div class="cards mini" id="mMarket" aria-label="Рынок карт"></div>
+      <div class="cards mini" id="mHand" aria-label="Ваша рука"></div>
+      <div class="dock-actions"><button id="mTickets">Мои маршруты</button><button id="mTake">Взять маршруты</button></div>
+    </div>
     <div class="tabs" role="tablist">
       <button role="tab" id="tabGame" aria-selected="true">Игра</button>
       <button role="tab" id="tabMap" aria-selected="false">Карта</button>
@@ -269,18 +317,18 @@ table.res th:first-child,table.res td:first-child{text-align:left}
         <div class="status" id="status"></div>
         <div class="players" id="players" style="margin-top:8px"></div>
       </section>
-      <section class="sec" style="margin-top:12px">
+      <section class="sec" id="secMarket" style="margin-top:12px">
         <h2><span>Рынок карт</span><span id="deckInfo" class="num"></span></h2>
         <div class="cards" id="market"></div>
       </section>
-      <section class="sec" style="margin-top:12px">
+      <section class="sec" id="secHand" style="margin-top:12px">
         <h2><span id="handTitle">Рука</span><span id="handCount" class="num"></span></h2>
         <div class="cards" id="hand"></div>
         <div class="row">
           <button id="btnTickets">Взять маршрутные билеты</button>
         </div>
       </section>
-      <section class="sec" style="margin-top:12px">
+      <section class="sec" id="secTickets" style="margin-top:12px">
         <h2><span>Маршрутные билеты</span><span id="tCount" class="num"></span></h2>
         <div class="tlist" id="myTickets"></div>
       </section>
@@ -373,10 +421,10 @@ const meP=()=>V&&V.me!=null?V.players[V.me]:null;
 
 // ----- анимации -----
 const reduceMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
-const rectOf=sel=>{const e=document.querySelector(sel);if(!e||!e.getClientRects().length)return null;const r=e.getBoundingClientRect();return r.width?r:null};
+const rectOf=sel=>{for(const e of document.querySelectorAll(sel)){const r=e.getBoundingClientRect();if(r.width&&r.height)return r}return null};
 function fly(f){
   const row=document.querySelector(`#players [data-pi="${f.pi}"]`);if(row){row.classList.remove("got");void row.offsetWidth;row.classList.add("got")}
-  const to=(f.pi===V.me&&rectOf("#hand"))||rectOf(`#players [data-pi="${f.pi}"]`)||rectOf(`#bplayers [data-pi="${f.pi}"]`);
+  const to=(f.pi===V.me&&rectOf("#mHand, #hand"))||rectOf(`[data-pi="${f.pi}"]`);
   if(!to||reduceMotion())return;
   const d=document.createElement("div");d.className="fly";d.innerHTML=f.card==null?backFace:f.card==="loco"?locoFace:wagonFace(f.card);
   d.style.left=f.src.left+"px";d.style.top=f.src.top+"px";document.body.appendChild(d);
@@ -394,7 +442,7 @@ function toast(p,text){
 function update(newV,events){
   events=events||[];
   const flies=[];
-  events.forEach(e=>{if(e.type==="draw"){const src=e.src==="market"?rectOf(`#market [data-m="${e.i}"]`):rectOf("#deckBtn");if(src)flies.push({pi:e.pi,src,card:e.card})}});
+  events.forEach(e=>{if(e.type==="draw"){const src=e.src==="market"?rectOf(`[data-m="${e.i}"]`):rectOf(".deckBtn");if(src)flies.push({pi:e.pi,src,card:e.card})}});
   const prevOver=V&&V.over;
   V=newV;
   if(!V.over)resultsShown=false;
@@ -627,12 +675,11 @@ function drawRoutes(){
       if(own!==undefined)el("circle",{r:1.8,fill:"#fff"},cg)}
     if(own!==undefined){const q=V.players[own],mx=sx+ux*len/2,my=sy+uy*len/2,b=el("g",{class:"badge",transform:`translate(${mx.toFixed(1)} ${my.toFixed(1)})`},g);
       el("circle",{r:7.5,fill:q.color},b);el("text",{y:3.4,"text-anchor":"middle"},b).textContent=q.name.trim().charAt(0).toUpperCase()}
-    g.addEventListener("pointerenter",e=>{
+    g.addEventListener("pointerenter",e=>{if(e.pointerType!=="mouse")return;
       const extra=t.type==="exp"?` · платите ${cardCost(t)} карт`:"";
       const who=own!==undefined?` · занят: ${V.players[own].name}`:cls.includes("blocked")?" · закрыт (второй путь уже занят)":"";
       showTip(e,`${A.n} — ${B.n} · ${n} ваг. · ${COLORS[t.color][1]} · ${TYPES[t.type].name}${extra} · ${trackPoints(t)} оч.${who}`)});
     g.addEventListener("pointermove",moveTip);g.addEventListener("pointerleave",hideTip);
-    g.addEventListener("pointerdown",e=>{e.stopPropagation();drag={mode:"track",id:t.id}});
   });
   vp.classList.toggle("dim",hl.keys.size>0);
 }
@@ -657,7 +704,6 @@ function drawCities(){
     if(c.big)el("circle",{r:2.6,class:"dot"},g);
     const [lx,ly,anc]=LABEL_POS[c.id]||[10,4];
     el("text",{x:lx,y:ly,"text-anchor":anc||"start"},g).textContent=c.exit?"→ "+c.n:c.n;
-    g.addEventListener("pointerdown",e=>{e.stopPropagation();drag={mode:"city",id:c.id}});
   });
 }
 const redrawMap=()=>{drawRings();drawRoutes();drawCities()};
@@ -703,6 +749,7 @@ const backFace=`<svg class="face" viewBox="0 0 66 46" aria-hidden="true">${frame
   ${wingL}<g transform="translate(66 0) scale(-1 1)">${wingL}</g>
   ${wheel(33,22,7,GOLD)}<circle cx="33" cy="22" r="2.2" fill="${GOLD}"/>
   <path d="M24 33.5h18" stroke="${GOLD}" stroke-width=".9"/><path d="M26 35.5h14" stroke="${GOLD}" stroke-width=".6"/></svg>`;
+const deckHTML=act=>`<button class="card back deckBtn" ${!act||(!V.deck&&!V.discard)?'aria-disabled="true"':""} aria-label="Взять из колоды, карт: ${V.deck}">${backFace}<b>${V.deck}</b></button>`;
 const cardHTML=(c,count,attrs="")=>c==="loco"
   ?`<button class="card loco" ${attrs} aria-label="Тепловоз${count!=null?", "+count:""}">${locoFace}${count!=null?`<b>${count}</b>`:""}</button>`
   :`<button class="card" ${attrs} aria-label="${COLORS[c][1]}${count!=null?", "+count:""}">${wagonFace(c)}${count!=null?`<b>${count}</b>`:""}</button>`;
@@ -718,7 +765,8 @@ function render(){
   if(!V){
     $("turnTitle").textContent=S&&S.kind==="online"?`Комната ${S.code}`:"Дорога в Сасово";
     $("status").textContent=S&&S.kind==="online"?"Ждём начала игры.":"Выберите режим игры.";
-    ["players","market","hand","myTickets","log","bplayers"].forEach(id=>$(id).innerHTML="");
+    ["players","market","hand","myTickets","log","bplayers","mMarket","mHand"].forEach(id=>$(id).innerHTML="");
+    $("mTurn").textContent=$("turnTitle").textContent;$("mInfo").textContent="";$("mTake").disabled=true;
     $("deckInfo").textContent="";$("handCount").textContent="";$("tCount").textContent="";$("btnTickets").disabled=true;return;
   }
   const p=V.players[V.turn],me=meP();
@@ -733,23 +781,29 @@ function render(){
   else st="Возьмите 2 карты, постройте перегон (подсвечены доступные) или возьмите маршруты.";
   if(V.finalLeft!==null&&!V.over)st+=` Последний круг: ходов осталось ${V.finalLeft}.`;
   $("status").textContent=st;
-  $("hint").textContent=mode==="game"?(V.over?"Игра окончена. Наведите на перегон, чтобы увидеть владельца.":"Нажмите перегон, чтобы построить. Наведите, чтобы увидеть цену."):"Нажмите два города, чтобы проложить путь.";
+  $("hint").textContent=isMobile()
+    ?(mode==="game"?(V.over?"Игра окончена.":"Коснитесь перегона, чтобы построить. Два пальца — масштаб."):"Коснитесь двух городов, чтобы проложить путь.")
+    :(mode==="game"?(V.over?"Игра окончена. Наведите на перегон, чтобы увидеть владельца.":"Нажмите перегон, чтобы построить. Наведите, чтобы увидеть цену."):"Нажмите два города, чтобы проложить путь.");
   $("bplayers").innerHTML=V.players.map((q,i)=>`<div data-pi="${i}" class="${i===V.turn&&!V.over?"cur":""}"><i style="background:${q.color}"></i>${esc(q.name)} <b>${q.score}</b></div>`).join("");
   $("players").innerHTML=V.players.map((q,i)=>`<div data-pi="${i}" class="pl${i===V.turn&&!V.over?" cur":""}"><i style="background:${q.color}"></i>
     <span>${esc(q.name)}${i===V.me?" (вы)":""}${q.bot?" · бот":""}</span><span class="num" title="Очки за перегоны"><b>${q.score}</b> оч</span>
     <span class="num" title="Вагонов осталось"><b>${q.cars}</b> ваг</span><span class="num" title="Карт в руке · маршрутов">${q.cards} к · ${q.ticketCount} м</span></div>`).join("");
   const act=canAct();
   $("market").innerHTML=V.market.map((c,i)=>cardHTML(c,null,`data-m="${i}" ${!act||(c==="loco"&&V.drawn>0)?'aria-disabled="true"':""}`)).join("")
-    +`<button class="card back" id="deckBtn" ${!act||(!V.deck&&!V.discard)?'aria-disabled="true"':""} aria-label="Взять из колоды, карт: ${V.deck}">${backFace}<b>${V.deck}</b></button>`;
+    +deckHTML(act);
+  $("mMarket").innerHTML=$("market").innerHTML;
   $("deckInfo").textContent=`колода ${V.deck} · сброс ${V.discard}`;
-  $("market").querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>takeMarket(+b.dataset.m));
-  $("deckBtn").onclick=takeDeck;
+  document.querySelectorAll("#market [data-m],#mMarket [data-m]").forEach(b=>b.onclick=()=>takeMarket(+b.dataset.m));
+  document.querySelectorAll(".deckBtn").forEach(b=>b.onclick=takeDeck);
+  $("mTurn").innerHTML=V.over?"Игра окончена":V.phase==="setup"?"Выбор маршрутов":V.turn===V.me?"Ваш ход":`Ходит <span style="color:${p.color}">${esc(p.name)}</span>`;
+  $("mInfo").textContent=me?`${me.score} оч · ${me.cars} ваг`:"";
   $("log").innerHTML=V.log.map(l=>`<div>${l}</div>`).join("");
   if(!me){
     $("handTitle").textContent="Рука скрыта";$("handCount").textContent="";
     $("hand").innerHTML=`<span class="status">${p.bot?"Ходит бот.":`Ждём, пока ${esc(p.name)} откроет свои карты.`}</span>`;
     $("tCount").textContent="";$("myTickets").innerHTML=`<span class="status">Маршруты видит только игрок, чей ход.</span>`;
-    $("btnTickets").disabled=true;return;
+    $("btnTickets").disabled=true;
+    $("mHand").innerHTML=`<span class="status">${p.bot?"Ходит бот.":"Рука скрыта до передачи хода."}</span>`;$("mTickets").textContent="Мои маршруты";$("mTake").disabled=true;layout();return;
   }
   $("handTitle").textContent=S&&S.kind==="local"&&S.multi?`Рука: ${me.name}`:"Ваша рука";
   const keys=[...CARD_COLORS,"loco"].filter(k=>me.hand[k]>0);
@@ -760,7 +814,13 @@ function render(){
   const done=me.tickets.filter(t=>t.done).length;
   $("tCount").textContent=`${done}/${me.tickets.length}`;
   $("myTickets").innerHTML=me.tickets.length?me.tickets.map((t,i)=>ticketHTML(t,"",`data-t="${i}"`)).join(""):`<span class="status">Маршрутов пока нет.</span>`;
-  $("myTickets").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const t=me.tickets[+b.dataset.t];setHL(shortest(t.a,t.b))});
+  $("myTickets").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const t=me.tickets[+b.dataset.t],pth=shortest(t.a,t.b);setHL(pth);
+    if(isMobile()){collapseSheet();zoomToNodes(pth.nodes)}});
+  $("mHand").innerHTML=keys.length?keys.map(k=>cardHTML(k,me.hand[k],'tabindex="-1"')).join(""):`<span class="status">Карт нет.</span>`;
+  $("mHand").querySelectorAll(".card").forEach(b=>b.classList.add("static"));
+  $("mTickets").textContent=`Мои маршруты · ${done}/${me.tickets.length}`;
+  $("mTake").disabled=$("btnTickets").disabled;
+  layout();
 }
 let flashT;
 function flash(msg){const h=$("hint");h.textContent=msg;clearTimeout(flashT);flashT=setTimeout(()=>render(),2600)}
@@ -987,15 +1047,90 @@ function zoom(f,cx,cy){if(cx===undefined){cx=vb.x+vb.w/2;cy=vb.y+vb.h/2}const nw
 svg.addEventListener("wheel",e=>{e.preventDefault();const p=toSvg(e);zoom(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
 $("zown").onclick=()=>{const on=svg.classList.toggle("focus-owned");$("zown").setAttribute("aria-pressed",on)};
 $("zin").onclick=()=>zoom(1/1.3);$("zout").onclick=()=>zoom(1.3);$("zfit").onclick=fit;
-let drag=null;
-svg.addEventListener("pointerdown",e=>{if(drag)return;drag={mode:"pan",sx:e.clientX,sy:e.clientY,vb0:{...vb},moved:false};svg.setPointerCapture(e.pointerId);svg.classList.add("panning")});
-svg.addEventListener("pointermove",e=>{if(!drag||drag.mode!=="pan")return;const b=svg.getBoundingClientRect(),s=Math.max(vb.w/b.width,vb.h/b.height);
-  const dx=(e.clientX-drag.sx)*s,dy=(e.clientY-drag.sy)*s;if(Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;vb.x=drag.vb0.x-dx;vb.y=drag.vb0.y-dy;applyVB()});
-svg.addEventListener("pointerup",()=>{if(!drag)return;const d=drag;drag=null;svg.classList.remove("panning");
-  if(d.mode==="pan"&&!d.moved){clearHL();document.querySelectorAll(".line").forEach(x=>x.classList.remove("on"));redrawMap();if(mode==="map")$("sel").textContent="Нажмите два города на карте."}
-  if(d.mode==="track")onTrackClick(d.id);
-  if(d.mode==="city")onCityClick(d.id)});
-svg.addEventListener("pointercancel",()=>{drag=null;svg.classList.remove("panning")});
+// ----- жесты: перетаскивание, масштаб двумя пальцами, двойное касание; попадание по перегону с запасом -----
+const pointers=new Map();let gesture=null,lastTap={t:0,x:0,y:0};
+const isMobile=()=>matchMedia("(max-width:760px)").matches;
+function geom(v){const r=svg.getBoundingClientRect(),s=Math.max(v.w/r.width,v.h/r.height);return {r,s,ox:(r.width-v.w/s)/2,oy:(r.height-v.h/s)/2}}
+function hitTarget(e){const tr=e.target.closest&&e.target.closest(".trk");if(tr)return {kind:"track",id:+tr.dataset.id};
+  const c=e.target.closest&&e.target.closest(".city");return c?{kind:"city",id:c.dataset.id}:null}
+svg.addEventListener("pointerdown",e=>{
+  try{svg.setPointerCapture(e.pointerId)}catch(_){}
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===1){gesture={mode:"pan",sx:e.clientX,sy:e.clientY,vb0:{...vb},moved:false,target:hitTarget(e)};svg.classList.add("panning")}
+  else if(pointers.size===2){const [p1,p2]=[...pointers.values()];
+    gesture={mode:"pinch",d0:Math.hypot(p1.x-p2.x,p1.y-p2.y)||1,m0:{x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2},vb0:{...vb},moved:true}}
+});
+svg.addEventListener("pointermove",e=>{
+  if(!pointers.has(e.pointerId)||!gesture)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(gesture.mode==="pan"){
+    const g=geom(vb),dxp=e.clientX-gesture.sx,dyp=e.clientY-gesture.sy;
+    if(!gesture.moved&&Math.hypot(dxp,dyp)<(e.pointerType==="mouse"?3:8))return;
+    gesture.moved=true;vb.x=gesture.vb0.x-dxp*g.s;vb.y=gesture.vb0.y-dyp*g.s;applyVB();
+  } else if(gesture.mode==="pinch"&&pointers.size>=2){
+    const [p1,p2]=[...pointers.values()],d=Math.hypot(p1.x-p2.x,p1.y-p2.y)||1,m={x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
+    const v0=gesture.vb0,g0=geom(v0),px=v0.x+(gesture.m0.x-g0.r.left-g0.ox)*g0.s,py=v0.y+(gesture.m0.y-g0.r.top-g0.oy)*g0.s;
+    const w2=Math.min(3200,Math.max(160,v0.w*gesture.d0/d)),k=w2/v0.w,s2=g0.s*k;
+    vb={x:px-(m.x-g0.r.left-g0.ox)*s2,y:py-(m.y-g0.r.top-g0.oy)*s2,w:w2,h:v0.h*k};applyVB();
+  }
+});
+function endPointer(e,cancel){
+  if(!pointers.has(e.pointerId))return;pointers.delete(e.pointerId);
+  const g=gesture;
+  if(pointers.size===1&&g&&g.mode==="pinch"){const [p]=[...pointers.values()];gesture={mode:"pan",sx:p.x,sy:p.y,vb0:{...vb},moved:true};return}
+  if(pointers.size>0)return;
+  gesture=null;svg.classList.remove("panning");
+  if(!cancel&&g&&g.mode==="pan"&&!g.moved)onTap(e,g.target);
+}
+svg.addEventListener("pointerup",e=>endPointer(e,false));
+svg.addEventListener("pointercancel",e=>endPointer(e,true));
+function trackSeg(t){const R=9,OFF=12,A=cities[t.a],B=cities[t.b],dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,off=t.lane*OFF;
+  const sx=A.x+ux*R-uy*off,sy=A.y+uy*R+ux*off;return [sx,sy,sx+ux*(L-2*R),sy+uy*(L-2*R)]}
+function segD(px,py,[ax,ay,bx,by]){const L=(bx-ax)**2+(by-ay)**2,t=Math.max(0,Math.min(1,((px-ax)*(bx-ax)+(py-ay)*(by-ay))/L));return Math.hypot(px-ax-t*(bx-ax),py-ay-t*(by-ay))}
+function onTap(e,target){
+  const p=toSvg(e),u=geom(vb).s,finger=e.pointerType!=="mouse";
+  if(target&&target.kind==="city"){onCityClick(target.id);return}
+  if(mode==="game"&&V){
+    if(target&&target.kind==="track"&&!finger){onTrackClick(target.id);return}
+    const near=tracks.map(t=>({t,d:segD(p.x,p.y,trackSeg(t))})).filter(x=>x.d<=Math.max(18*u,7)).sort((a,b)=>a.d-b.d);
+    if(near.length){if(near.length===1||near[0].d<near[1].d*0.45)onTrackClick(near[0].t.id);else showTrackChooser(near.slice(0,5).map(x=>x.t));return}
+  }
+  const city=Object.values(cities).map(c=>({c,d:Math.hypot(c.x-p.x,c.y-p.y)})).filter(x=>x.d<=Math.max((finger?20:10)*u,9)).sort((a,b)=>a.d-b.d)[0];
+  if(city){onCityClick(city.c.id);return}
+  const now=Date.now();
+  if(now-lastTap.t<320&&Math.hypot(e.clientX-lastTap.x,e.clientY-lastTap.y)<30){lastTap.t=0;zoom(1/1.8,p.x,p.y);return}
+  lastTap={t:now,x:e.clientX,y:e.clientY};
+  clearHL();document.querySelectorAll(".line").forEach(x=>x.classList.remove("on"));redrawMap();if(mode==="map")$("sel").textContent="Нажмите два города на карте.";
+}
+function showTrackChooser(list){
+  hl={keys:new Set(list.map(t=>t.key)),ends:new Set()};redrawMap();
+  openModal(`<h3>Какой перегон?</h3><p>Рядом с местом нажатия несколько путей. Выберите нужный или приблизьте карту двумя пальцами.</p>
+   <div class="paybtns">${list.map((t,i)=>{const o=V.owner[t.id];return `<button data-c="${i}"><em style="background:${o!==undefined?V.players[o].color:COLORS[t.color][0]}"></em>
+     ${esc(cities[t.a].n)} — ${esc(cities[t.b].n)} · ${t.cars} ваг. · ${o!==undefined?"занят: "+esc(V.players[o].name):COLORS[t.color][1]}</button>`}).join("")}</div>
+   <div class="row"><button id="cCancel">Отмена</button></div>`);
+  $("dialog").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{$("modal").hidden=true;clearHL();redrawMap();onTrackClick(list[+b.dataset.c].id)});
+  $("cCancel").onclick=()=>{clearHL();closeModal()};
+}
+function zoomToNodes(ids){
+  const xs=ids.map(i=>cities[i].x),ys=ids.map(i=>cities[i].y),pad=70,r=svg.getBoundingClientRect(),asp=r.width/r.height;
+  let x0=Math.min(...xs)-pad,y0=Math.min(...ys)-pad,w=Math.max(...xs)+pad-x0,h=Math.max(...ys)+pad-y0;
+  if(w/h<asp){const nw=h*asp;x0-=(nw-w)/2;w=nw}else{const nh=w/asp;y0-=(nh-h)/2;h=nh}
+  if(w<220){const k=220/w;x0-=(w*k-w)/2;y0-=(h*k-h)/2;w*=k;h*=k}
+  vb={x:x0,y:y0,w,h};applyVB();
+}
+// ----- нижняя панель на телефоне -----
+const side=$("side");
+function layout(){
+  if(!isMobile()){$("board").style.height="";side.classList.remove("collapsed");return}
+  if(!side.classList.contains("collapsed"))return;
+  const top=$("board").getBoundingClientRect().top;
+  $("board").style.height=Math.max(220,window.innerHeight-top-side.offsetHeight)+"px";
+}
+function collapseSheet(){side.classList.add("collapsed");$("dockToggle").setAttribute("aria-expanded","false");layout()}
+function expandSheet(){side.classList.remove("collapsed");$("dockToggle").setAttribute("aria-expanded","true");side.scrollTop=0}
+$("dockToggle").onclick=()=>side.classList.contains("collapsed")?expandSheet():collapseSheet();
+$("mTickets").onclick=()=>{expandSheet();setTab("tabGame");requestAnimationFrame(()=>$("secTickets").scrollIntoView({block:"start"}))};
+$("mTake").onclick=()=>{collapseSheet();takeTicketsAction()};
+window.addEventListener("resize",()=>{if(isMobile()&&!side.dataset.init){side.dataset.init=1;side.classList.add("collapsed")}layout()});
 function onCityClick(id){
   if(!selA||selA===id){selA=id;hl={keys:new Set(),ends:new Set()};redrawMap();if(mode==="map")$("sel").innerHTML=`Откуда: <b>${esc(cities[id].n)}</b>. Выберите второй город.`;return}
   const p=shortest(selA,id);selA=null;setHL(p);
@@ -1018,7 +1153,8 @@ $("modal").addEventListener("keydown",e=>{if(e.key==="Escape"&&$("pCancel"))clos
 // =====================================================================
 // BOOT
 // =====================================================================
-computeFull();drawGeo();addGrain();fit();renderMapTab();renderRules();render();
+if(isMobile()){side.classList.add("collapsed");side.dataset.init=1}
+computeFull();drawGeo();addGrain();layout();fit();renderMapTab();renderRules();render();
 function routeFromHash(){
   const m=/^#room-(\d{4,6})$/.exec(location.hash);if(!m||!onlineAvailable)return false;
   if(S&&S.kind==="online"&&S.code===m[1])return true;
