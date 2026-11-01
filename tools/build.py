@@ -1,6 +1,11 @@
-"""Собирает public/index.html из tools/template.html и tools/map_data.py.
-Запуск: python3 tools/build.py"""
-import json, os
+"""Собирает игру из шаблона, ядра и данных карты.
+
+  public/index.html  — страница (ядро встроено внутрь)
+  server/core.js     — то же ядро для игрового сервера
+
+Запуск: python3 tools/build.py [--artifact путь.html]
+"""
+import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 ns = {}
@@ -13,8 +18,16 @@ data = ("const CITY_DATA=[\n" + ",\n".join(" " + js(c) for c in ns["CITIES"]) + 
         "const NUDGE=" + js(ns["NUDGE"]) + ";\n"
         "const ROUTE_DATA=[\n" + ",\n".join(" " + js(r) for r in routes) + "\n];\n"
         "const TICKET_DATA=" + json.dumps(json.load(open(os.path.join(HERE, "tickets.json"), encoding="utf8")), ensure_ascii=False) + ";")
-tpl = open(os.path.join(HERE, "template.html"), encoding="utf8").read()
-page = tpl.replace("/*@DATA@*/", data).replace(" 'tabindex=\"-1\" class-static'", " 'tabindex=\"-1\"'")
+core = open(os.path.join(HERE, "core.js"), encoding="utf8").read().replace("/*@DATA@*/", data)
+os.makedirs(os.path.join(ROOT, "server"), exist_ok=True)
+open(os.path.join(ROOT, "server", "core.js"), "w", encoding="utf8").write(
+    "// Сгенерировано tools/build.py из tools/core.js — не редактируйте вручную.\n" + core)
+
+page = open(os.path.join(HERE, "template.html"), encoding="utf8").read().replace("/*@CORE@*/", core)
+
+if "--artifact" in sys.argv:
+    open(sys.argv[sys.argv.index("--artifact") + 1], "w", encoding="utf8").write(page)
+
 head, body = page.split("<header>", 1)
 head = head.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")
 out = f"""<!doctype html>
@@ -33,4 +46,4 @@ out = f"""<!doctype html>
 """
 os.makedirs(os.path.join(ROOT, "public"), exist_ok=True)
 open(os.path.join(ROOT, "public", "index.html"), "w", encoding="utf8").write(out)
-print("public/index.html собран")
+print("public/index.html и server/core.js собраны")

@@ -4,7 +4,9 @@
 Игроки собирают карты вагонов, строят перегоны и соединяют города из маршрутных билетов.
 Три пути Москва → Сасово: основная магистраль, запасной путь и северный ход через Владимир.
 
-Игра — один файл `public/index.html`, сервер и сборщики не нужны.
+Режимы: с ботами, с друзьями за одним устройством и онлайн (каждый со своего устройства, нужен игровой сервер из `server/`).
+
+Страница — один файл `public/index.html`. Онлайн-режим обслуживает `server/server.js` (Node.js 18+, без зависимостей).
 Сайт: https://sasovo.daagamma.com
 
 ## Структура
@@ -12,7 +14,11 @@
 | Путь | Что это |
 |---|---|
 | `public/index.html` | готовая игра, её отдаёт nginx |
-| `tools/template.html` | разметка, стили и логика игры |
+| `server/server.js` | игровой сервер онлайн-режима: комнаты, ходы, боты |
+| `server/core.js` | игровое ядро для сервера (собирается из `tools/core.js`) |
+| `tools/core.js` | игровое ядро: карта, правила, боты, кто что видит |
+| `tools/template.html` | разметка и стили страницы |
+| `tools/client_game.js`, `tools/client_ui.js` | исходники клиентской части (уже вставлены в шаблон) |
 | `tools/map_data.py` | города, перегоны, цвета, типы путей |
 | `tools/build.py` | собирает `public/index.html` из шаблона и данных |
 | `tools/check_map.py` | проверяет карту: пересечения линий, города вплотную |
@@ -50,6 +56,28 @@ cp /var/www/sasovo-game/deploy/sasovo.nginx.conf /etc/nginx/sites-available/saso
 ln -sf /etc/nginx/sites-available/sasovo.conf /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 certbot --nginx -d sasovo.daagamma.com --redirect
+```
+
+## Онлайн-режим (один раз)
+
+```bash
+bash /var/www/sasovo-game/deploy/install-online.sh
+```
+
+Скрипт ставит Node.js (если его нет), запускает службу `sasovo-server` и добавляет в nginx проброс `/api/` на `127.0.0.1:8787`.
+Комнаты сохраняются в `/var/lib/sasovo-server/rooms.json`, поэтому перезапуск сервера партии не обрывает.
+
+Проверка и журнал:
+
+```bash
+systemctl status sasovo-server
+journalctl -u sasovo-server -n 50
+```
+
+Локальный запуск для разработки:
+
+```bash
+cd server && STATIC_DIR=../public node server.js   # http://127.0.0.1:8787
 ```
 
 ## Обновление

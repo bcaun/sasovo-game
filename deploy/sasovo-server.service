@@ -1,0 +1,19 @@
+# /etc/systemd/system/sasovo-server.service
+# Игровой сервер онлайн-режима «Дорога в Сасово».
+[Unit]
+Description=Дорога в Сасово — игровой сервер
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/sasovo-game/server
+ExecStart=/usr/bin/env node server.js
+Environment=PORT=8787
+Environment=HOST=127.0.0.1
+Environment=DATA_DIR=/var/lib/sasovo-server
+StateDirectory=sasovo-server
+DynamicUser=yes
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
