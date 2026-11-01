@@ -80,12 +80,11 @@ aside{display:flex;flex-direction:column;gap:12px;min-width:0}
 
 /* train cards */
 .cards{display:flex;flex-wrap:wrap;gap:6px}
-.card{position:relative;width:58px;height:40px;border-radius:5px;border:1.5px solid var(--carStroke);display:flex;align-items:flex-end;justify-content:flex-end;padding:2px 4px;cursor:pointer;
-  background:var(--c);box-shadow:inset 0 0 0 3px color-mix(in srgb,#fff 30%,transparent)}
-.card svg{position:absolute;left:5px;top:7px;width:36px;height:18px}
-.card b{font-family:var(--font-mono);font-size:13px;background:var(--panel);color:var(--ink);border-radius:3px;padding:0 4px;line-height:1.3}
-.card.loco{background:conic-gradient(from 45deg,#d1453b,#e58a2b,#e9c440,#4a9a5b,#3a74c4,#8a5bb8,#d1453b)}
-.card.back{background:repeating-linear-gradient(135deg,var(--accent) 0 6px,color-mix(in srgb,var(--accent) 70%,var(--panel)) 6px 12px)}
+.card{position:relative;width:66px;height:46px;border:none;border-radius:4px;padding:0;background:none;cursor:pointer;box-shadow:0 1px 2px rgba(40,25,10,.35)}
+.card svg.face{position:absolute;inset:0;width:100%;height:100%;display:block}
+.card b{position:absolute;right:3px;bottom:3px;font-family:var(--font-display);font-weight:700;font-size:12.5px;background:#f6ecd2;color:#2b2116;border:1px solid #2b2116;border-radius:2px;padding:0 4px;line-height:1.25}
+.card:hover:not([aria-disabled="true"]):not(.static){transform:translateY(-2px);box-shadow:0 3px 6px rgba(40,25,10,.35)}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .12s,box-shadow .12s}}
 .card.static{cursor:default}
 .card.hl{outline:3px solid var(--glow);outline-offset:1px}
 .card:disabled,.card[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
@@ -490,7 +489,7 @@ const ROUTE_DATA=[
  ["mur", "nn", ["red"]],
  ["erm", "div", ["purple"]]
 ];
-const TICKET_DATA={"long": [{"a": "msk", "b": "sas", "pts": 21}, {"a": "shah", "b": "pnz", "pts": 33}, {"a": "dub", "b": "div", "pts": 30}, {"a": "moz", "b": "nn", "pts": 27}, {"a": "ser", "b": "mur", "pts": 20}, {"a": "klin", "b": "sar", "pts": 28}], "regular": [{"a": "ist", "b": "sol", "pts": 2}, {"a": "luh", "b": "zar", "pts": 2}, {"a": "bron", "b": "lyu", "pts": 3}, {"a": "kas", "b": "shil", "pts": 3}, {"a": "kash", "b": "sprud", "pts": 3}, {"a": "kol", "b": "mihn", "pts": 3}, {"a": "ozy", "b": "vos", "pts": 3}, {"a": "che", "b": "dom", "pts": 3}, {"a": "chu", "b": "gly", "pts": 3}, {"a": "kir", "b": "sap", "pts": 4}, {"a": "kra", "b": "ram", "pts": 4}, {"a": "kur", "b": "nog", "pts": 4}, {"a": "nf", "b": "zven", "pts": 4}, {"a": "nmi", "b": "sko", "pts": 4}, {"a": "oz", "b": "sha", "pts": 4}, {"a": "pit", "b": "shat", "pts": 4}, {"a": "rya", "b": "spk", "pts": 4}, {"a": "alx", "b": "dmi", "pts": 5}, {"a": "eka", "b": "kas", "pts": 5}, {"a": "kad", "b": "pit", "pts": 5}, {"a": "mih", "b": "rzh", "pts": 5}, {"a": "odi", "b": "ruza", "pts": 5}, {"a": "odi", "b": "pod", "pts": 5}, {"a": "dom", "b": "push", "pts": 6}, {"a": "ist", "b": "pod", "pts": 6}, {"a": "kur", "b": "vla", "pts": 6}, {"a": "lyu", "b": "zven", "pts": 6}, {"a": "ozy", "b": "rya", "pts": 6}, {"a": "chu", "b": "erm", "pts": 6}, {"a": "dmi", "b": "vol", "pts": 7}, {"a": "eg", "b": "rya", "pts": 7}, {"a": "eka", "b": "pnz", "pts": 7}, {"a": "luh", "b": "nmi", "pts": 7}, {"a": "rzh", "b": "sprud", "pts": 7}, {"a": "sas", "b": "div", "pts": 7}, {"a": "vla", "b": "vos", "pts": 8}, {"a": "kad", "b": "tuma", "pts": 8}, {"a": "kub", "b": "mihn", "pts": 8}, {"a": "pav", "b": "sar", "pts": 8}, {"a": "sol", "b": "vol", "pts": 8}, {"a": "che", "b": "push", "pts": 8}, {"a": "bron", "b": "sol", "pts": 9}, {"a": "dmi", "b": "ruza", "pts": 9}, {"a": "kad", "b": "pnz", "pts": 9}, {"a": "msk", "b": "ozy", "pts": 9}, {"a": "pod", "b": "sha", "pts": 9}, {"a": "sas", "b": "tuma", "pts": 9}, {"a": "bron", "b": "spk", "pts": 10}, {"a": "gus", "b": "pit", "pts": 10}, {"a": "kash", "b": "kub", "pts": 10}, {"a": "sap", "b": "sprud", "pts": 10}, {"a": "shat", "b": "sko", "pts": 10}, {"a": "dub", "b": "nf", "pts": 11}, {"a": "kash", "b": "kra", "pts": 11}, {"a": "klin", "b": "sp", "pts": 11}, {"a": "msk", "b": "shah", "pts": 11}, {"a": "ram", "b": "ruza", "pts": 11}, {"a": "alx", "b": "che", "pts": 12}, {"a": "eg", "b": "pav", "pts": 12}, {"a": "kir", "b": "oz", "pts": 12}, {"a": "kol", "b": "moz", "pts": 12}, {"a": "gly", "b": "gus", "pts": 13}, {"a": "erm", "b": "vla", "pts": 13}, {"a": "kub", "b": "kur", "pts": 13}, {"a": "mur", "b": "vos", "pts": 13}, {"a": "kol", "b": "mur", "pts": 14}, {"a": "oz", "b": "nn", "pts": 14}, {"a": "pav", "b": "sha", "pts": 14}, {"a": "gus", "b": "mih", "pts": 15}, {"a": "nog", "b": "shil", "pts": 15}, {"a": "ser", "b": "tuma", "pts": 15}, {"a": "eg", "b": "gly", "pts": 16}, {"a": "erm", "b": "zar", "pts": 16}, {"a": "kir", "b": "sp", "pts": 16}]};
+const TICKET_DATA={"long": [{"a": "msk", "b": "sas", "pts": 21}, {"a": "ser", "b": "mur", "pts": 20}, {"a": "dub", "b": "rya", "pts": 21}, {"a": "shah", "b": "vla", "pts": 20}, {"a": "alx", "b": "sar", "pts": 22}, {"a": "kash", "b": "nn", "pts": 22}], "regular": [{"a": "ist", "b": "sol", "pts": 2}, {"a": "luh", "b": "zar", "pts": 2}, {"a": "bron", "b": "lyu", "pts": 3}, {"a": "kas", "b": "pit", "pts": 3}, {"a": "kol", "b": "kur", "pts": 3}, {"a": "mih", "b": "pav", "pts": 3}, {"a": "mihn", "b": "pod", "pts": 3}, {"a": "moz", "b": "vol", "pts": 3}, {"a": "chu", "b": "shil", "pts": 3}, {"a": "eka", "b": "gly", "pts": 4}, {"a": "kad", "b": "div", "pts": 4}, {"a": "kir", "b": "sap", "pts": 4}, {"a": "kub", "b": "odi", "pts": 4}, {"a": "nmi", "b": "sko", "pts": 4}, {"a": "oz", "b": "sha", "pts": 4}, {"a": "che", "b": "nf", "pts": 4}, {"a": "shat", "b": "pnz", "pts": 4}, {"a": "bron", "b": "kra", "pts": 5}, {"a": "gus", "b": "spk", "pts": 5}, {"a": "dom", "b": "nog", "pts": 5}, {"a": "klin", "b": "zven", "pts": 5}, {"a": "ozy", "b": "sprud", "pts": 5}, {"a": "ram", "b": "vos", "pts": 5}, {"a": "dom", "b": "push", "pts": 6}, {"a": "ist", "b": "pod", "pts": 6}, {"a": "kas", "b": "spk", "pts": 6}, {"a": "kub", "b": "sol", "pts": 6}, {"a": "kur", "b": "mihn", "pts": 6}, {"a": "lyu", "b": "zven", "pts": 6}, {"a": "dmi", "b": "zven", "pts": 7}, {"a": "eg", "b": "kash", "pts": 7}, {"a": "eka", "b": "pnz", "pts": 7}, {"a": "erm", "b": "tuma", "pts": 7}, {"a": "kol", "b": "sprud", "pts": 7}, {"a": "sar", "b": "sko", "pts": 7}, {"a": "dmi", "b": "kra", "pts": 8}, {"a": "moz", "b": "msk", "pts": 8}, {"a": "mur", "b": "tuma", "pts": 8}, {"a": "ruza", "b": "ser", "pts": 8}, {"a": "rzh", "b": "shat", "pts": 8}, {"a": "che", "b": "push", "pts": 8}, {"a": "alx", "b": "klin", "pts": 9}, {"a": "bron", "b": "mih", "pts": 9}, {"a": "eg", "b": "ser", "pts": 9}, {"a": "kir", "b": "ozy", "pts": 9}, {"a": "lyu", "b": "ruza", "pts": 9}, {"a": "oz", "b": "sol", "pts": 9}, {"a": "dmi", "b": "nog", "pts": 10}, {"a": "eka", "b": "div", "pts": 10}, {"a": "kad", "b": "sap", "pts": 10}, {"a": "mihn", "b": "nmi", "pts": 10}, {"a": "oz", "b": "spk", "pts": 10}, {"a": "gus", "b": "ozy", "pts": 11}, {"a": "klin", "b": "sp", "pts": 11}, {"a": "pit", "b": "rya", "pts": 11}, {"a": "ram", "b": "ruza", "pts": 11}, {"a": "rzh", "b": "vos", "pts": 11}, {"a": "erm", "b": "nn", "pts": 12}, {"a": "kra", "b": "nf", "pts": 12}, {"a": "pav", "b": "shil", "pts": 12}, {"a": "sha", "b": "sprud", "pts": 12}, {"a": "gly", "b": "gus", "pts": 13}, {"a": "mur", "b": "vos", "pts": 13}, {"a": "sas", "b": "sha", "pts": 13}, {"a": "chu", "b": "sko", "pts": 13}, {"a": "alx", "b": "shah", "pts": 14}, {"a": "dub", "b": "vla", "pts": 14}, {"a": "kol", "b": "vol", "pts": 14}, {"a": "kad", "b": "luh", "pts": 15}, {"a": "mih", "b": "sas", "pts": 15}, {"a": "odi", "b": "tuma", "pts": 15}, {"a": "eg", "b": "gly", "pts": 16}, {"a": "erm", "b": "zar", "pts": 16}, {"a": "kir", "b": "sp", "pts": 16}]};
 
 const cities={};
 CITY_DATA.forEach(([id,n,lon,lat,reg,big])=>{const [x0,y0]=P(lon,lat),[dx,dy]=NUDGE[id]||[0,0];
@@ -535,7 +534,7 @@ tracks.forEach(t=>t.cars=Math.max(1,Math.min(6,Math.round(dist(t.a,t.b)/(UNIT*TY
 // =====================================================================
 // RULES
 // =====================================================================
-const CARS_PER_PLAYER=40;
+const CARS_PER_PLAYER=45;
 const ROUTE_POINTS=[0,1,2,4,6,9,12];          // by cars placed
 const EXPRESS_BONUS=2;                         // express pays one extra card, scores +2
 const RING_BONUS=6, LONGEST_BONUS=10;
@@ -957,11 +956,45 @@ function clearHL(){hl={keys:new Set(),ends:new Set()};selA=null}
 // =====================================================================
 // RENDER: SIDEBAR (GAME)
 // =====================================================================
-const wagonSVG=`<svg viewBox="0 0 36 18" aria-hidden="true"><rect x="1" y="2" width="34" height="10" rx="2" fill="rgba(255,255,255,.35)" stroke="rgba(0,0,0,.35)"/><circle cx="8" cy="14" r="3" fill="rgba(0,0,0,.45)"/><circle cx="28" cy="14" r="3" fill="rgba(0,0,0,.45)"/></svg>`;
-const locoSVG=`<svg viewBox="0 0 36 18" aria-hidden="true"><path d="M2 12V5h18V2h8v4h6v6z" fill="rgba(255,255,255,.55)" stroke="rgba(0,0,0,.4)"/><circle cx="8" cy="14" r="3" fill="rgba(0,0,0,.5)"/><circle cx="18" cy="14" r="3" fill="rgba(0,0,0,.5)"/><circle cx="28" cy="14" r="3" fill="rgba(0,0,0,.5)"/></svg>`;
+// старые гравюры: товарный вагон, паровоз и рубашка колоды с крылатым колесом
+const INK="#2b2116",CREAM="#f6ecd2",GOLD="#d4b064",BURGUNDY="#5e1b20";
+const wheel=(cx,cy,r,c)=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="1.2"/><circle cx="${cx}" cy="${cy}" r="1" fill="${c}"/>`+
+  [0,45,90,135].map(a=>`<line x1="${cx}" y1="${cy-r+1}" x2="${cx}" y2="${cy+r-1}" stroke="${c}" stroke-width=".7" transform="rotate(${a} ${cx} ${cy})"/>`).join("");
+const frame=(bg,line)=>`<rect x=".6" y=".6" width="64.8" height="44.8" rx="4" fill="${bg}" stroke="${INK}" stroke-width="1.2"/>
+  <rect x="3.2" y="3.2" width="59.6" height="39.6" rx="2" fill="none" stroke="${line}" stroke-width=".8" opacity=".85"/>
+  ${[[5.5,5.5],[60.5,5.5],[5.5,40.5],[60.5,40.5]].map(([x,y])=>`<rect x="${x-1.3}" y="${y-1.3}" width="2.6" height="2.6" fill="${line}" transform="rotate(45 ${x} ${y})"/>`).join("")}`;
+function wagonFace(color){
+  const light=color==="white"||color==="yellow",ink=light?INK:CREAM;
+  const planks=[18,23,43,48].map(x=>`<line x1="${x}" y1="12" x2="${x}" y2="26" stroke="${ink}" stroke-width=".6" opacity=".8"/>`).join("");
+  return `<svg class="face" viewBox="0 0 66 46" aria-hidden="true">${frame(COLORS[color][0],ink)}
+   <path d="M12 11.5Q33 6.5 54 11.5" fill="none" stroke="${ink}" stroke-width="1.3"/>
+   <rect x="13" y="11.5" width="40" height="15" fill="none" stroke="${ink}" stroke-width="1.2"/>${planks}
+   <rect x="28" y="13" width="10" height="13" fill="none" stroke="${ink}" stroke-width=".9"/>
+   <path d="M28 13L38 26M38 13L28 26" stroke="${ink}" stroke-width=".6"/>
+   <line x1="9" y1="28.5" x2="57" y2="28.5" stroke="${ink}" stroke-width="1.4"/>
+   <circle cx="9.5" cy="27" r="1.4" fill="${ink}"/><circle cx="56.5" cy="27" r="1.4" fill="${ink}"/>
+   ${wheel(20,32.5,4.2,ink)}${wheel(46,32.5,4.2,ink)}</svg>`;
+}
+const locoFace=`<svg class="face" viewBox="0 0 66 46" aria-hidden="true">${frame("#1f2a24",GOLD)}
+  ${["red","orange","yellow","green","blue","purple","black","white"].map((c,i)=>`<circle cx="${12+i*6}" cy="8.5" r="1.7" fill="${COLORS[c][0]}" stroke="${GOLD}" stroke-width=".4"/>`).join("")}
+  <circle cx="17" cy="13" r="1.6" fill="${GOLD}" opacity=".45"/><circle cx="21" cy="12" r="2.1" fill="${GOLD}" opacity=".35"/>
+  <path d="M15.5 15h6l-1 2.5h-4z" fill="${GOLD}"/><rect x="16.5" y="17.5" width="4" height="6" fill="${GOLD}"/>
+  <rect x="13" y="20.5" width="25" height="8" rx="3.5" fill="none" stroke="${GOLD}" stroke-width="1.3"/>
+  <path d="M25 20.5a2.6 2.6 0 0 1 5.2 0" fill="${GOLD}"/>
+  <rect x="38" y="15" width="12" height="13.5" fill="none" stroke="${GOLD}" stroke-width="1.3"/><path d="M36.5 15h15" stroke="${GOLD}" stroke-width="1.6"/>
+  <rect x="41" y="17.5" width="6" height="4.5" fill="none" stroke="${GOLD}" stroke-width=".8"/>
+  <path d="M8 33.5L13 28.5V33.5Z" fill="${GOLD}"/><line x1="8" y1="31" x2="56" y2="31" stroke="${GOLD}" stroke-width="1"/>
+  ${wheel(18,34.5,3,GOLD)}${wheel(30,34,4.8,GOLD)}${wheel(42,34,4.8,GOLD)}${wheel(53,35,2.6,GOLD)}
+  <line x1="30" y1="36" x2="42" y2="36" stroke="${GOLD}" stroke-width="1.2"/></svg>`;
+const wingL=[["M26 19.5Q18 13 8.5 14.5"],["M26 22Q17 18.5 9.5 20.5"],["M26 24.5Q18 24 11.5 26.5"]].map(([d])=>`<path d="${d}" fill="none" stroke="${GOLD}" stroke-width="1.4" stroke-linecap="round"/>`).join("");
+const backFace=`<svg class="face" viewBox="0 0 66 46" aria-hidden="true">${frame(BURGUNDY,GOLD)}
+  <rect x="6" y="6" width="54" height="34" rx="1.5" fill="none" stroke="${GOLD}" stroke-width=".4" stroke-dasharray="1.5 1.5"/>
+  ${wingL}<g transform="translate(66 0) scale(-1 1)">${wingL}</g>
+  ${wheel(33,22,7,GOLD)}<circle cx="33" cy="22" r="2.2" fill="${GOLD}"/>
+  <path d="M24 33.5h18" stroke="${GOLD}" stroke-width=".9"/><path d="M26 35.5h14" stroke="${GOLD}" stroke-width=".6"/></svg>`;
 const cardHTML=(c,count,attrs="")=>c==="loco"
-  ?`<button class="card loco" ${attrs} aria-label="Тепловоз${count!=null?", "+count:""}">${locoSVG}${count!=null?`<b>${count}</b>`:""}</button>`
-  :`<button class="card" style="--c:${COLORS[c][0]}" ${attrs} aria-label="${COLORS[c][1]}${count!=null?", "+count:""}">${wagonSVG}${count!=null?`<b>${count}</b>`:""}</button>`;
+  ?`<button class="card loco" ${attrs} aria-label="Тепловоз${count!=null?", "+count:""}">${locoFace}${count!=null?`<b>${count}</b>`:""}</button>`
+  :`<button class="card" ${attrs} aria-label="${COLORS[c][1]}${count!=null?", "+count:""}">${wagonFace(c)}${count!=null?`<b>${count}</b>`:""}</button>`;
 const ticketHTML=(t,extra="",attrs="")=>`<button class="ticket${t.long?" long":""}${t.done?" done":""}${extra}" ${attrs}>
   <span class="route">${esc(tName(t))}</span><span class="pts">${t.pts}</span>
   <span class="meta">${t.done?"выполнен":t.long?"дальний маршрут":"маршрут"}</span></button>`;
@@ -985,7 +1018,7 @@ function render(){
   // market
   const act=canAct();
   $("market").innerHTML=G.market.map((c,i)=>cardHTML(c,null,`data-m="${i}" ${!act||(c==="loco"&&G.drawn>0)?'aria-disabled="true"':""}`)).join("")
-    +`<button class="card back" id="deckBtn" ${!act||(!G.deck.length&&!G.discard.length)?'aria-disabled="true"':""} aria-label="Взять из колоды"><b>${G.deck.length}</b></button>`;
+    +`<button class="card back" id="deckBtn" ${!act||(!G.deck.length&&!G.discard.length)?'aria-disabled="true"':""} aria-label="Взять из колоды, карт: ${G.deck.length}">${backFace}<b>${G.deck.length}</b></button>`;
   $("deckInfo").textContent=`колода ${G.deck.length} · сброс ${G.discard.length}`;
   $("market").querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>takeMarket(+b.dataset.m));
   $("deckBtn").onclick=takeDeck;
@@ -1109,7 +1142,7 @@ function renderRules(){
    <li>Бонусы: +${RING_BONUS} за больше всех перегонов ЦКАД, +${RING_BONUS} за больше всех перегонов БМО, +${LONGEST_BONUS} за самую длинную непрерывную дорогу.</li></ul>
   <h4>Колода маршрутов: 80 билетов</h4>
   <p>Очки билета равны длине кратчайшего пути в вагонах.</p>
-  <ul><li>6 дальних, от 20 вагонов.</li><li>74 обычных: 17 коротких (2–4), 40 средних (5–11), 17 длинных (12–16).</li></ul>
+  <ul><li>6 дальних, 20–22 вагона.</li><li>74 обычных: 17 коротких (2–4), 40 средних (5–11), 17 длинных (12–16).</li></ul>
   <div class="tablewrap"><table class="res"><tr><th>Ценность</th>${[...new Set(REGULAR_TICKETS.map(t=>t.pts))].sort((a,b)=>a-b).map(v=>`<th>${v}</th>`).join("")}</tr>
    <tr><td>Билетов</td>${[...new Set(REGULAR_TICKETS.map(t=>t.pts))].sort((a,b)=>a-b).map(v=>`<td class="num">${REGULAR_TICKETS.filter(t=>t.pts===v).length}</td>`).join("")}</tr></table></div>
   <h4>Дальние маршруты</h4><div class="tlist" style="max-height:none">${LONG_TICKETS.map(t=>ticketHTML(t)).join("")}</div>`;

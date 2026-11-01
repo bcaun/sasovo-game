@@ -6,29 +6,29 @@
    "pts": 21
   },
   {
-   "a": "shah",
-   "b": "pnz",
-   "pts": 33
-  },
-  {
-   "a": "dub",
-   "b": "div",
-   "pts": 30
-  },
-  {
-   "a": "moz",
-   "b": "nn",
-   "pts": 27
-  },
-  {
    "a": "ser",
    "b": "mur",
    "pts": 20
   },
   {
-   "a": "klin",
+   "a": "dub",
+   "b": "rya",
+   "pts": 21
+  },
+  {
+   "a": "shah",
+   "b": "vla",
+   "pts": 20
+  },
+  {
+   "a": "alx",
    "b": "sar",
-   "pts": 28
+   "pts": 22
+  },
+  {
+   "a": "kash",
+   "b": "nn",
+   "pts": 22
   }
  ],
  "regular": [
@@ -49,33 +49,43 @@
   },
   {
    "a": "kas",
-   "b": "shil",
-   "pts": 3
-  },
-  {
-   "a": "kash",
-   "b": "sprud",
+   "b": "pit",
    "pts": 3
   },
   {
    "a": "kol",
-   "b": "mihn",
+   "b": "kur",
    "pts": 3
   },
   {
-   "a": "ozy",
-   "b": "vos",
+   "a": "mih",
+   "b": "pav",
    "pts": 3
   },
   {
-   "a": "che",
-   "b": "dom",
+   "a": "mihn",
+   "b": "pod",
+   "pts": 3
+  },
+  {
+   "a": "moz",
+   "b": "vol",
    "pts": 3
   },
   {
    "a": "chu",
-   "b": "gly",
+   "b": "shil",
    "pts": 3
+  },
+  {
+   "a": "eka",
+   "b": "gly",
+   "pts": 4
+  },
+  {
+   "a": "kad",
+   "b": "div",
+   "pts": 4
   },
   {
    "a": "kir",
@@ -83,18 +93,8 @@
    "pts": 4
   },
   {
-   "a": "kra",
-   "b": "ram",
-   "pts": 4
-  },
-  {
-   "a": "kur",
-   "b": "nog",
-   "pts": 4
-  },
-  {
-   "a": "nf",
-   "b": "zven",
+   "a": "kub",
+   "b": "odi",
    "pts": 4
   },
   {
@@ -108,43 +108,43 @@
    "pts": 4
   },
   {
-   "a": "pit",
-   "b": "shat",
+   "a": "che",
+   "b": "nf",
    "pts": 4
   },
   {
-   "a": "rya",
+   "a": "shat",
+   "b": "pnz",
+   "pts": 4
+  },
+  {
+   "a": "bron",
+   "b": "kra",
+   "pts": 5
+  },
+  {
+   "a": "gus",
    "b": "spk",
-   "pts": 4
-  },
-  {
-   "a": "alx",
-   "b": "dmi",
    "pts": 5
   },
   {
-   "a": "eka",
-   "b": "kas",
+   "a": "dom",
+   "b": "nog",
    "pts": 5
   },
   {
-   "a": "kad",
-   "b": "pit",
+   "a": "klin",
+   "b": "zven",
    "pts": 5
   },
   {
-   "a": "mih",
-   "b": "rzh",
+   "a": "ozy",
+   "b": "sprud",
    "pts": 5
   },
   {
-   "a": "odi",
-   "b": "ruza",
-   "pts": 5
-  },
-  {
-   "a": "odi",
-   "b": "pod",
+   "a": "ram",
+   "b": "vos",
    "pts": 5
   },
   {
@@ -158,8 +158,18 @@
    "pts": 6
   },
   {
+   "a": "kas",
+   "b": "spk",
+   "pts": 6
+  },
+  {
+   "a": "kub",
+   "b": "sol",
+   "pts": 6
+  },
+  {
    "a": "kur",
-   "b": "vla",
+   "b": "mihn",
    "pts": 6
   },
   {
@@ -168,23 +178,13 @@
    "pts": 6
   },
   {
-   "a": "ozy",
-   "b": "rya",
-   "pts": 6
-  },
-  {
-   "a": "chu",
-   "b": "erm",
-   "pts": 6
-  },
-  {
    "a": "dmi",
-   "b": "vol",
+   "b": "zven",
    "pts": 7
   },
   {
    "a": "eg",
-   "b": "rya",
+   "b": "kash",
    "pts": 7
   },
   {
@@ -193,43 +193,43 @@
    "pts": 7
   },
   {
-   "a": "luh",
-   "b": "nmi",
+   "a": "erm",
+   "b": "tuma",
    "pts": 7
   },
   {
-   "a": "rzh",
+   "a": "kol",
    "b": "sprud",
    "pts": 7
   },
   {
-   "a": "sas",
-   "b": "div",
+   "a": "sar",
+   "b": "sko",
    "pts": 7
   },
   {
-   "a": "vla",
-   "b": "vos",
+   "a": "dmi",
+   "b": "kra",
    "pts": 8
   },
   {
-   "a": "kad",
+   "a": "moz",
+   "b": "msk",
+   "pts": 8
+  },
+  {
+   "a": "mur",
    "b": "tuma",
    "pts": 8
   },
   {
-   "a": "kub",
-   "b": "mihn",
+   "a": "ruza",
+   "b": "ser",
    "pts": 8
   },
   {
-   "a": "pav",
-   "b": "sar",
-   "pts": 8
-  },
-  {
-   "a": "sol",
-   "b": "vol",
+   "a": "rzh",
+   "b": "shat",
    "pts": 8
   },
   {
@@ -238,68 +238,63 @@
    "pts": 8
   },
   {
+   "a": "alx",
+   "b": "klin",
+   "pts": 9
+  },
+  {
    "a": "bron",
+   "b": "mih",
+   "pts": 9
+  },
+  {
+   "a": "eg",
+   "b": "ser",
+   "pts": 9
+  },
+  {
+   "a": "kir",
+   "b": "ozy",
+   "pts": 9
+  },
+  {
+   "a": "lyu",
+   "b": "ruza",
+   "pts": 9
+  },
+  {
+   "a": "oz",
    "b": "sol",
    "pts": 9
   },
   {
    "a": "dmi",
-   "b": "ruza",
-   "pts": 9
+   "b": "nog",
+   "pts": 10
+  },
+  {
+   "a": "eka",
+   "b": "div",
+   "pts": 10
   },
   {
    "a": "kad",
-   "b": "pnz",
-   "pts": 9
+   "b": "sap",
+   "pts": 10
   },
   {
-   "a": "msk",
-   "b": "ozy",
-   "pts": 9
+   "a": "mihn",
+   "b": "nmi",
+   "pts": 10
   },
   {
-   "a": "pod",
-   "b": "sha",
-   "pts": 9
-  },
-  {
-   "a": "sas",
-   "b": "tuma",
-   "pts": 9
-  },
-  {
-   "a": "bron",
+   "a": "oz",
    "b": "spk",
    "pts": 10
   },
   {
    "a": "gus",
-   "b": "pit",
-   "pts": 10
-  },
-  {
-   "a": "kash",
-   "b": "kub",
-   "pts": 10
-  },
-  {
-   "a": "sap",
-   "b": "sprud",
-   "pts": 10
-  },
-  {
-   "a": "shat",
-   "b": "sko",
-   "pts": 10
-  },
-  {
-   "a": "dub",
-   "b": "nf",
-   "pts": 11
-  },
-  {
-   "a": "kash",
-   "b": "kra",
+   "b": "ozy",
    "pts": 11
   },
   {
@@ -308,8 +303,8 @@
    "pts": 11
   },
   {
-   "a": "msk",
-   "b": "shah",
+   "a": "pit",
+   "b": "rya",
    "pts": 11
   },
   {
@@ -318,23 +313,28 @@
    "pts": 11
   },
   {
-   "a": "alx",
-   "b": "che",
+   "a": "rzh",
+   "b": "vos",
+   "pts": 11
+  },
+  {
+   "a": "erm",
+   "b": "nn",
    "pts": 12
   },
   {
-   "a": "eg",
-   "b": "pav",
+   "a": "kra",
+   "b": "nf",
    "pts": 12
   },
   {
-   "a": "kir",
-   "b": "oz",
+   "a": "pav",
+   "b": "shil",
    "pts": 12
   },
   {
-   "a": "kol",
-   "b": "moz",
+   "a": "sha",
+   "b": "sprud",
    "pts": 12
   },
   {
@@ -343,47 +343,47 @@
    "pts": 13
   },
   {
-   "a": "erm",
-   "b": "vla",
-   "pts": 13
-  },
-  {
-   "a": "kub",
-   "b": "kur",
-   "pts": 13
-  },
-  {
    "a": "mur",
    "b": "vos",
    "pts": 13
   },
   {
-   "a": "kol",
-   "b": "mur",
-   "pts": 14
-  },
-  {
-   "a": "oz",
-   "b": "nn",
-   "pts": 14
-  },
-  {
-   "a": "pav",
+   "a": "sas",
    "b": "sha",
+   "pts": 13
+  },
+  {
+   "a": "chu",
+   "b": "sko",
+   "pts": 13
+  },
+  {
+   "a": "alx",
+   "b": "shah",
    "pts": 14
   },
   {
-   "a": "gus",
-   "b": "mih",
+   "a": "dub",
+   "b": "vla",
+   "pts": 14
+  },
+  {
+   "a": "kol",
+   "b": "vol",
+   "pts": 14
+  },
+  {
+   "a": "kad",
+   "b": "luh",
    "pts": 15
   },
   {
-   "a": "nog",
-   "b": "shil",
+   "a": "mih",
+   "b": "sas",
    "pts": 15
   },
   {
-   "a": "ser",
+   "a": "odi",
    "b": "tuma",
    "pts": 15
   },
