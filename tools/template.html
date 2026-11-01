@@ -1,7 +1,7 @@
-<title>Окская магистраль</title>
+<title>Дорога в Сасово</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap">
 <style>
 /* Layout: map board on the left, dispatcher's ledger (game / map tabs) on the right; stacks on phones. */
 :root{
@@ -9,7 +9,11 @@
   --land:#dfe7dc;--moscow:#f1f0e2;--ryazan:#e8efe0;--vladimir:#e6ebe6;--border:#8f9c84;--water:#7fb2cf;
   --accent:#1f6f8b;--glow:#ffcc33;--city:#ffffff;--cityRing:#1d2a33;--carStroke:rgba(20,30,36,.55);
   --ckad:#e39a2d;--bmo:#7a5a3c;--express:#3aa0d8;--ticket:#fbf7ea;--ticketInk:#3b3426;--good:#2e8b57;--bad:#c0392b;
-  --font-display:"Unbounded","PT Sans",system-ui,sans-serif;
+  --font-display:"Old Standard TT","PT Serif",Georgia,serif;
+  --font-map:"PT Serif",Georgia,serif;
+  /* the board itself is a printed paper map: same look in light and dark UI */
+  --paper:#f2e6c4;--paperOut:#ddcfa6;--mapInk:#3b2f1e;--mapMuted:#7d6a48;--mapWater:#6d9bb5;--mapWaterDeep:#4f7f9c;
+  --washM:#c4784a;--washR:#6f9a4e;--washV:#8b74ad;--forest:#55703f;--forestLight:#7f9a5c;
   --font-body:"PT Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-mono:"PT Mono",ui-monospace,Menlo,monospace;
 }
@@ -33,7 +37,8 @@ h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,28px
 .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:2px 7px;border-radius:3px;color:var(--muted)}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px;align-items:start}
 @media (max-width:980px){.wrap{grid-template-columns:minmax(0,1fr)}}
-.board{position:relative;background:var(--land);border:1px solid var(--line);border-radius:6px;overflow:hidden;height:clamp(460px,86vh,1000px);touch-action:none}
+@media (max-width:600px){.board{height:min(72vh,560px)}}
+.board{position:relative;background:var(--paperOut);border:1px solid var(--line);border-radius:6px;overflow:hidden;height:clamp(460px,86vh,1000px);touch-action:none}
 svg#map{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 svg#map.panning{cursor:grabbing}
 .zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
@@ -45,7 +50,7 @@ button.primary{background:var(--accent);color:var(--panel);border-color:var(--ac
 button:focus-visible,input:focus-visible,li:focus-visible,select:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input[type=text],select{font-family:var(--font-body);font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
 .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:5px 8px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap;z-index:5}
-.hint{position:absolute;left:10px;bottom:10px;font-size:12.5px;color:var(--ink);background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);padding:5px 9px;border-radius:4px;max-width:calc(100% - 20px)}
+.hint{position:absolute;left:10px;bottom:10px;font-size:12.5px;color:var(--mapInk);background:color-mix(in srgb,var(--paper) 92%,transparent);border:1px solid var(--mapMuted);padding:5px 9px;border-radius:4px;max-width:calc(100% - 20px)}
 
 aside{display:flex;flex-direction:column;gap:12px;min-width:0}
 .tabs{display:flex;gap:4px}
@@ -136,52 +141,69 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 .toggles{display:flex;flex-direction:column;gap:6px;font-size:14px}
 .toggles label{display:flex;gap:8px;align-items:center;cursor:pointer}
 
-/* map layers */
-.region-m{fill:var(--moscow);stroke:var(--border);stroke-width:1.6;stroke-dasharray:7 4}
-.region-r{fill:var(--ryazan);stroke:var(--border);stroke-width:1.6;stroke-dasharray:7 4}
-.region-v{fill:var(--vladimir);stroke:var(--border);stroke-width:1.6;stroke-dasharray:7 4}
-.region-label{font-family:var(--font-display);font-weight:500;font-size:18px;letter-spacing:.3em;fill:var(--border);opacity:.4}
-.neigh{font-family:var(--font-body);font-size:15px;letter-spacing:.2em;fill:var(--muted);opacity:.5;text-transform:uppercase}
-.river{fill:none;stroke:var(--water);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
-.river.small{stroke-width:2.4}
-.river-label{font-family:var(--font-body);font-style:italic;font-size:13px;fill:var(--water)}
-.ring-ckad{fill:none;stroke:var(--ckad);stroke-width:30;opacity:.25;stroke-linejoin:round}
+/* map layers: printed paper board */
+.paper-out{fill:var(--paperOut)}
+.region-fill{fill:var(--paper)}
+.region-line{fill:none;stroke:var(--mapMuted);stroke-width:1.4;stroke-dasharray:9 3 2 3;opacity:.85}
+.region-label{font-family:var(--font-map);font-style:italic;font-size:17px;letter-spacing:.18em;fill:var(--mapMuted);opacity:.75}
+.neigh{font-family:var(--font-map);font-size:13px;letter-spacing:.14em;fill:var(--mapMuted);opacity:.7}
+.ml-area{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.2em;fill:var(--forest);opacity:.6}
+.ml-relief{font-family:var(--font-map);font-style:italic;font-size:12px;letter-spacing:.12em;fill:#8a6a3c;opacity:.85}
+.ml-river{font-family:var(--font-map);font-style:italic;font-size:12px;fill:var(--mapWaterDeep)}
+.tree-con{fill:var(--forest);opacity:.5}
+.tree-dec{fill:var(--forestLight);opacity:.45}
+.marsh{fill:none;stroke:#6f8a6a;stroke-width:1;opacity:.6}
+.relief{fill:none;stroke:#9c7a48;stroke-width:1.3;opacity:.6;stroke-linecap:round}
+.lake{fill:#a9c6d4;stroke:var(--mapWater);stroke-width:1}
+.river{fill:none;stroke:var(--mapWater);stroke-linecap:round;stroke-linejoin:round}
+.river-bank{fill:none;stroke:#cfe0e6;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.grain{pointer-events:none;mix-blend-mode:multiply}
+.cmp-ring{fill:none;stroke:var(--mapMuted);stroke-width:1.2}.cmp-ring.thin{stroke-width:.6}
+.cmp-a{fill:var(--mapInk);opacity:.75}.cmp-b{fill:var(--paper);stroke:var(--mapInk);stroke-width:.6}
+.cmp-t{font-family:var(--font-display);font-weight:700;font-size:13px;fill:var(--mapInk)}
+.ct-box{fill:var(--paper);stroke:var(--mapInk);stroke-width:1.6}
+.ct-inner{fill:none;stroke:var(--washM);stroke-width:1}
+.ct-title{font-family:var(--font-display);font-weight:700;font-size:25px;fill:var(--mapInk)}
+.ct-sub{font-family:var(--font-map);font-style:italic;font-size:12px;fill:var(--mapMuted);letter-spacing:.06em}
+.scale-l{fill:none;stroke:var(--mapInk);stroke-width:1.4}
+.ring-ckad{fill:none;stroke:var(--ckad);stroke-width:30;opacity:.22;stroke-linejoin:round}
 .ring-ckad-c{fill:none;stroke:var(--ckad);stroke-width:2;stroke-dasharray:10 8;opacity:.9;stroke-linejoin:round}
-.ring-bmo{fill:none;stroke:var(--bmo);stroke-width:26;stroke-dasharray:2.5 5;opacity:.4;stroke-linejoin:round}
-.ring-label{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.12em;paint-order:stroke;stroke:var(--land);stroke-width:4px;stroke-linejoin:round}
-.ring-label.ckad{fill:var(--ckad)}
-.ring-label.bmo{fill:var(--bmo)}
+.ring-bmo{fill:none;stroke:var(--bmo);stroke-width:26;stroke-dasharray:2.5 5;opacity:.38;stroke-linejoin:round}
+.ring-label{font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:.12em;paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+.ring-label.ckad{fill:#b8701c}
+.ring-label.bmo{fill:#6b4b2c}
+#routes{filter:url(#carShadow)}
 .casing{fill:none;stroke-linecap:round}
-.casing.express{stroke:var(--express);opacity:.45}
-.casing.main{stroke:var(--glow);opacity:.35}
-.car{stroke:var(--carStroke);stroke-width:1}
+.casing.express{stroke:var(--express);opacity:.4}
+.casing.main{stroke:#e8b020;opacity:.35}
+.car{stroke:rgba(40,28,12,.6);stroke-width:1}
 .trk{cursor:pointer}
 .trk .halo{fill:none;stroke:transparent;stroke-width:16}
-.trk:hover .car{stroke:var(--ink);stroke-width:1.6}
-.trk.on .car{stroke:var(--glow);stroke-width:2.6}
-.trk.owned .car{stroke:var(--cityRing);stroke-width:1.6}
+.trk:hover .car{stroke:var(--mapInk);stroke-width:1.6}
+.trk.on .car{stroke:#ffcc33;stroke-width:2.6}
+.trk.owned .car{stroke:#1b1309;stroke-width:1.6}
 .trk.blocked{opacity:.25}
-.trk.can .car{stroke:var(--accent);stroke-width:2}
+.trk.can .car{stroke:#1f6f8b;stroke-width:2}
 .dim .trk:not(.on):not(.owned){opacity:.3}
 .dim .casing{opacity:.12}
-.city circle{fill:var(--city);stroke:var(--cityRing);stroke-width:2.2;cursor:pointer}
+.city circle{fill:#fffaf0;stroke:var(--mapInk);stroke-width:2.2;cursor:pointer}
 .city circle.ckad-st{fill:none;stroke:var(--ckad);stroke-width:3;pointer-events:none}
 .city.big circle{stroke-width:3}
-.city.sel circle:not(.ckad-st){fill:var(--accent)}
-.city.end circle:not(.ckad-st){fill:var(--glow)}
-.city text{font-family:var(--font-body);font-weight:700;font-size:12.5px;fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-width:3.5px;stroke-linejoin:round;pointer-events:none}
-.city.big text{font-family:var(--font-display);font-weight:500;font-size:14px}
-.city.exit circle{fill:var(--land);stroke-dasharray:3 2}
-.city.exit text{font-style:italic;font-weight:400;fill:var(--muted)}
-.edit .city circle{cursor:move}
+.city.big circle.dot{fill:var(--mapInk);stroke:none;pointer-events:none}
+.city.sel circle:not(.ckad-st):not(.dot){fill:#1f6f8b}
+.city.end circle:not(.ckad-st):not(.dot){fill:#ffcc33}
+.city text{font-family:var(--font-map);font-weight:700;font-size:12.5px;fill:var(--mapInk);paint-order:stroke;stroke:var(--paper);stroke-width:3.5px;stroke-linejoin:round;pointer-events:none}
+.city.big text{font-family:var(--font-display);font-weight:700;font-size:15.5px}
+.city.exit circle{fill:var(--paper);stroke-dasharray:3 2}
+.city.exit text{font-style:italic;font-weight:400;fill:var(--mapMuted)}
 .nolabels .city text{display:none}
 @media (prefers-reduced-motion:no-preference){.trk .car{transition:opacity .2s}}
 </style>
 
 <header>
-  <h1>Окская магистраль</h1>
+  <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.4 игра</span>
+  <span class="tag">v0.5</span>
 </header>
 
 <div class="wrap">
@@ -571,18 +593,114 @@ function botTurn(){
 // =====================================================================
 // RENDER: MAP
 // =====================================================================
+// ---------- vintage map ground: paper, region washes, forests, rivers, relief ----------
+const TSNA=[[41.5,53.3],[41.6,53.6],[41.78,53.95],[41.98,54.28],[42.12,54.55],[42.22,54.78]];
+const MOKSHA=[[43.3,54.3],[42.9,54.5],[42.55,54.7],[42.22,54.8],[41.98,54.92],[41.78,54.98]];
+const PRONYA=[[39.35,53.75],[39.6,54.0],[39.85,54.25],[40.05,54.45],[40.3,54.55]];
+const PRA=[[40.05,55.25],[40.35,55.1],[40.6,54.95],[40.75,54.75],[40.82,54.6]];
+const LAKES=[[40.02,55.24,10,6,-20],[40.22,55.2,8,5,15],[40.3,55.28,6,4,0],[39.62,55.62,6,4,30],[41.05,55.3,5,3,0]];
+const FORESTS=[
+  [[39.3,55.78],[39.95,55.78],[40.6,55.58],[41.25,55.32],[41.3,55.0],[40.9,54.85],[40.3,54.92],[39.8,55.05],[39.5,55.3],[39.2,55.5]], // Мещёра
+  [[37.0,56.92],[38.9,56.95],[39.35,56.5],[38.6,56.2],[37.6,56.48],[36.9,56.58]],
+  [[35.1,56.25],[36.0,56.28],[36.6,55.95],[36.45,55.4],[35.6,55.28],[35.0,55.7]],
+  [[40.0,56.05],[41.6,56.05],[42.4,55.65],[41.6,55.38],[40.8,55.5]],
+  [[41.6,55.15],[42.7,55.05],[42.95,54.7],[42.3,54.6],[41.85,54.82]],
+  [[37.5,54.75],[38.3,54.65],[38.0,54.3],[37.3,54.5]],
+];
+const MARSH=[[39.7,55.5],[40.35,55.35],[40.9,55.2],[40.0,55.1],[39.9,55.38],[40.6,55.45]];
+const FIELDS=[[38.8,54.25],[41.6,54.2],[42.3,53.55],[40.6,53.25],[39.0,53.45]];
+const RIDGE=[[36.0,56.3],[36.5,56.36],[37.0,56.42],[37.6,56.5],[38.2,56.52]];
+const MAP_LABELS=[["М Е Щ Ё Р А",40.95,55.62,-8,"area"],["Клинско-Дмитровская гряда",37.85,56.63,-3,"relief"],
+  ["Окско-Донская равнина",40.4,53.42,0,"relief"],["р. Ока",40.15,54.47,-8,"river"],["р. Москва",35.75,55.5,0,"river"],
+  ["р. Клязьма",41.1,56.23,0,"river"],["р. Цна",41.66,53.72,62,"river"],["р. Мокша",42.75,54.62,-25,"river"],["р. Проня",39.55,53.98,52,"river"],["р. Пра",40.62,55.03,-50,"river"]];
+
+const rng=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+const inPoly=(x,y,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [xi,yi]=poly[i],[xj,yj]=poly[j];
+  if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c};
+const proj=a=>a.map(([lo,la])=>P(lo,la));
+function smooth(p,closed){ // Catmull-Rom → cubic Bézier
+  const n=p.length,g=i=>p[closed?(i+n)%n:Math.max(0,Math.min(n-1,i))];let d=`M${p[0][0].toFixed(1)},${p[0][1].toFixed(1)}`;
+  for(let i=0;i<(closed?n:n-1);i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);
+    d+=` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`}
+  return d+(closed?"Z":"");
+}
+function segDist(px,py,ax,ay,bx,by){const L=(bx-ax)**2+(by-ay)**2,t=Math.max(0,Math.min(1,((px-ax)*(bx-ax)+(py-ay)*(by-ay))/L));return Math.hypot(px-ax-t*(bx-ax),py-ay-t*(by-ay))}
+// keep decoration away from tracks, stations and their labels
+function clearOfPlay(x,y,pad=14){
+  for(const k in groups){const [a,b]=k.split("|"),A=cities[a],B=cities[b];if(segDist(x,y,A.x,A.y,B.x,B.y)<pad+groups[k].length*5)return false}
+  for(const c of Object.values(cities)){if(Math.hypot(x-c.x,y-c.y)<pad+10)return false;
+    const [lx,ly,anc]=LABEL_POS[c.id]||[10,4],w=(c.n.length+2)*7.2,x0=c.x+lx-(anc==="end"?w:anc==="middle"?w/2:0);
+    if(x>x0-4&&x<x0+w+4&&y>c.y+ly-14&&y<c.y+ly+6)return false}
+  return true;
+}
 function drawGeo(){
   gGeo.innerHTML="";
+  const defs=el("defs",{},gGeo);
+  defs.innerHTML=`
+   <filter id="paperGrain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="7"/>
+     <feColorMatrix values="0 0 0 0 .35  0 0 0 0 .27  0 0 0 0 .16  0 0 0 .55 0"/></filter>
+   <filter id="paperBlot" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".006" numOctaves="2" seed="3"/>
+     <feColorMatrix values="0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .22  0 0 0 .9 -.35"/></filter>
+   <radialGradient id="vignette" cx="50%" cy="50%" r="60%"><stop offset="55%" stop-color="#5a4426" stop-opacity="0"/><stop offset="100%" stop-color="#5a4426" stop-opacity=".32"/></radialGradient>
+   <pattern id="fieldHatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="9" stroke="#a48a52" stroke-width="1" opacity=".35"/></pattern>
+   <filter id="carShadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx=".7" dy="1.3" stdDeviation=".7" flood-color="#2a1d0c" flood-opacity=".38"/></filter>
+   ${[["M",MOSCOW_OBL],["R",RYAZAN_OBL],["V",VLADIMIR_OBL]].map(([k,poly])=>`<clipPath id="clip${k}"><polygon points="${pts(poly)}"/></clipPath>`).join("")}`;
+  const X=vbFull;
+  el("rect",{x:X.x-400,y:X.y-400,width:X.w+800,height:X.h+800,class:"paper-out"},gGeo);
   const gB=el("g",{id:"borders"},gGeo);
-  el("polygon",{points:pts(VLADIMIR_OBL),class:"region-v"},gB);
-  el("polygon",{points:pts(MOSCOW_OBL),class:"region-m"},gB);
-  el("polygon",{points:pts(RYAZAN_OBL),class:"region-r"},gB);
-  NEIGH.forEach(([n,lon,lat])=>{const [x,y]=P(lon,lat);el("text",{x,y,class:"neigh","text-anchor":"middle"},gB).textContent=n});
-  [["МОСКОВСКАЯ",37.55,54.55],["РЯЗАНСКАЯ",41.0,53.55],["ВЛАДИМИРСКАЯ",41.2,56.55]].forEach(([n,lo,la])=>{const [x,y]=P(lo,la);
-    el("text",{x,y,class:"region-label","text-anchor":"middle"},gB).textContent=n});
+  [["V",VLADIMIR_OBL,"var(--washV)"],["M",MOSCOW_OBL,"var(--washM)"],["R",RYAZAN_OBL,"var(--washR)"]].forEach(([k,poly,wash])=>{
+    el("polygon",{points:pts(poly),class:"region-fill"},gB);
+    el("polygon",{points:pts(poly),fill:"none",stroke:wash,"stroke-width":34,opacity:.42,"clip-path":`url(#clip${k})`,"stroke-linejoin":"round"},gB);
+    el("polygon",{points:pts(poly),fill:"none",stroke:wash,"stroke-width":7,opacity:.55,"clip-path":`url(#clip${k})`,"stroke-linejoin":"round"},gB);
+  });
+  [VLADIMIR_OBL,MOSCOW_OBL,RYAZAN_OBL].forEach(poly=>el("polygon",{points:pts(poly),class:"region-line"},gB));
+  // terrain
+  const gT=el("g",{id:"terrain"},gGeo);
+  el("path",{d:smooth(proj(FIELDS),true),fill:"url(#fieldHatch)"},gT);
+  const r=rng(11);let con="",dec="";
+  FORESTS.forEach(f=>{const poly=proj(f);const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);
+    for(let y=Math.min(...ys);y<Math.max(...ys);y+=11)for(let x=Math.min(...xs);x<Math.max(...xs);x+=12){
+      const jx=x+(r()-.5)*9,jy=y+(r()-.5)*8;if(!inPoly(jx,jy,poly)||r()<.18||!clearOfPlay(jx,jy))continue;
+      if(r()<.6)con+=`M${jx.toFixed(1)} ${(jy-6).toFixed(1)}l3.6 7.5h-7.2z`;
+      else dec+=`M${(jx-3.2).toFixed(1)} ${jy.toFixed(1)}a3.2 3.2 0 1 1 6.4 0a3.2 3.2 0 1 1-6.4 0z`}});
+  el("path",{d:dec,class:"tree-dec"},gT);el("path",{d:con,class:"tree-con"},gT);
+  let tuft="";MARSH.forEach(([lo,la])=>{const [cx,cy]=P(lo,la);for(let i=0;i<9;i++){const x=cx+(r()-.5)*70,y=cy+(r()-.5)*40;
+    if(!clearOfPlay(x,y,10))continue;tuft+=`M${(x-5).toFixed(1)} ${y.toFixed(1)}h10M${(x-2).toFixed(1)} ${y.toFixed(1)}l-1.5-4M${x.toFixed(1)} ${y.toFixed(1)}v-5M${(x+2).toFixed(1)} ${y.toFixed(1)}l1.5-4`}});
+  el("path",{d:tuft,class:"marsh"},gT);
+  const ridge=proj(RIDGE);let hach="";
+  for(let i=0;i<ridge.length-1;i++){const [ax,ay]=ridge[i],[bx,by]=ridge[i+1],L=Math.hypot(bx-ax,by-ay);
+    for(let s=0;s<L;s+=15){const x=ax+(bx-ax)*s/L,y=ay+(by-ay)*s/L;if(!clearOfPlay(x,y,8))continue;hach+=`M${(x-7).toFixed(1)} ${(y+3).toFixed(1)}q7-9 14 0`}}
+  el("path",{d:hach,class:"relief"},gT);
+  // water
   const gR=el("g",{id:"rivers"},gGeo);
-  el("polyline",{points:pts(OKA),class:"river"},gR);el("polyline",{points:pts(MOSKVA),class:"river small"},gR);el("polyline",{points:pts(KLYAZMA),class:"river small"},gR);
-  [["р. Ока",40.15,54.5],["р. Москва",35.75,55.52],["р. Клязьма",41.1,56.25]].forEach(([n,lo,la])=>{const [x,y]=P(lo,la);el("text",{x,y,class:"river-label"},gR).textContent=n});
+  LAKES.forEach(([lo,la,rx,ry,rot])=>{const [x,y]=P(lo,la);el("ellipse",{cx:x,cy:y,rx,ry,transform:`rotate(${rot} ${x} ${y})`,class:"lake"},gR)});
+  [[OKA,4.2],[MOSKVA,2.6],[KLYAZMA,2.6],[MOKSHA,2.8],[TSNA,2.2],[PRONYA,1.8],[PRA,1.8]].forEach(([riv,w])=>{const d=smooth(proj(riv));
+    el("path",{d,class:"river-bank","stroke-width":w+3},gR);el("path",{d,class:"river","stroke-width":w},gR)});
+  // labels
+  const gL=el("g",{id:"maplabels"},gGeo);
+  NEIGH.forEach(([n,lon,lat])=>{const [x,y]=P(lon,lat);el("text",{x,y,class:"neigh","text-anchor":"middle"},gL).textContent=n+" обл."});
+  [["Московская область",37.6,54.58],["Рязанская область",40.95,53.6],["Владимирская область",41.25,56.58]].forEach(([n,lo,la])=>{const [x,y]=P(lo,la);
+    el("text",{x,y,class:"region-label","text-anchor":"middle"},gL).textContent=n});
+  MAP_LABELS.forEach(([n,lo,la,rot,cls])=>{const [x,y]=P(lo,la);el("text",{x,y,class:"ml-"+cls,"text-anchor":"middle",transform:`rotate(${rot} ${x} ${y})`},gL).textContent=n});
+  drawOrnaments(gGeo);
+}
+function drawOrnaments(g){
+  // compass rose
+  const [cx,cy]=P(36.15,53.85),cr=el("g",{class:"compass",transform:`translate(${cx} ${cy})`},g);
+  el("circle",{r:40,class:"cmp-ring"},cr);el("circle",{r:34,class:"cmp-ring thin"},cr);
+  for(let i=0;i<8;i++){const a=i*45,L=i%2?24:44;
+    el("path",{d:`M0 ${-L}L5 -5L0 0Z`,class:"cmp-a",transform:`rotate(${a})`},cr);el("path",{d:`M0 ${-L}L-5 -5L0 0Z`,class:"cmp-b",transform:`rotate(${a})`},cr)}
+  el("circle",{r:3,class:"cmp-b"},cr);
+  [["С",0,-50],["Ю",0,60],["В",56,5],["З",-56,5]].forEach(([t,x,y])=>el("text",{x,y,class:"cmp-t","text-anchor":"middle"},cr).textContent=t);
+  // title cartouche
+  const [tx,ty]=P(35.2,56.98),ct=el("g",{class:"cartouche",transform:`translate(${tx} ${ty})`},g);
+  el("rect",{x:0,y:0,width:262,height:74,rx:3,class:"ct-box"},ct);el("rect",{x:5,y:5,width:252,height:64,rx:2,class:"ct-inner"},ct);
+  el("text",{x:131,y:36,class:"ct-title","text-anchor":"middle"},ct).textContent="Дорога в Сасово";
+  el("text",{x:131,y:56,class:"ct-sub","text-anchor":"middle"},ct).textContent="Москва · Рязань · Владимир · Мещёра";
+  // scale bar: ~50 km at the Oka latitude
+  const [s0x,s0y]=P(39.3,53.25),[s1x]=P(39.3+50/(111.32*Math.cos(54*Math.PI/180)),53.25),sb=el("g",{class:"scale"},g);
+  el("path",{d:`M${s0x} ${s0y}h${s1x-s0x}M${s0x} ${s0y-4}v8M${s1x} ${s0y-4}v8M${(s0x+s1x)/2} ${s0y-3}v6`,class:"scale-l"},sb);
+  el("text",{x:(s0x+s1x)/2,y:s0y-8,class:"ml-river","text-anchor":"middle"},sb).textContent="50 км";
 }
 const ringPath=ids=>"M"+ids.map(id=>cities[id].x+","+cities[id].y).join(" L")+"Z";
 function drawRings(){
@@ -622,14 +740,14 @@ function drawRoutes(){
   });
   vp.classList.toggle("dim",hl.keys.size>0);
 }
-const LABEL_POS={msk:[-12,-12,"end"],kol:[12,16],rya:[12,-10],sas:[12,-6],lyu:[10,-8],pod:[-10,-10,"end"],dom:[0,20,"middle"],
+const LABEL_POS={msk:[-12,-12,"end"],kol:[12,16],rya:[12,-10],sas:[-12,-12,"end"],lyu:[10,-8],pod:[-10,-10,"end"],dom:[0,20,"middle"],
  sprud:[-10,16,"end"],nog:[-4,-12,"end"],oz:[10,-6],kur:[10,4],vos:[10,12],bron:[10,-8],ram:[10,-8],
  push:[10,4],mihn:[10,4],kash:[-10,14,"end"],ozy:[10,-6],odi:[8,14],kub:[10,-4],zven:[-10,-8,"end"],
  luh:[10,6],zar:[-10,4,"end"],pit:[10,-8],erm:[8,-10],kad:[10,4],chu:[-8,-10,"end"],shat:[10,14],sar:[10,12],sap:[10,4],
  rzh:[10,12],sko:[8,16],pav:[-10,4,"end"],nmi:[10,4],mih:[-10,4,"end"],kir:[0,-12,"middle"],eka:[-10,14,"end"],shil:[0,-12,"middle"],
  kas:[10,-6],tuma:[10,-6],spk:[-10,-8,"end"],sha:[10,-6],eg:[10,6],che:[10,4],ser:[-10,4,"end"],nf:[-10,4,"end"],
  moz:[-10,10,"end"],ruza:[-8,-10,"end"],vol:[0,-12,"middle"],shah:[0,18,"middle"],ist:[-10,-6,"end"],sol:[10,4],klin:[-10,-6,"end"],
- dub:[10,4],dmi:[10,4],sp:[10,4],kra:[10,4],alx:[10,-6],vla:[10,-10],gus:[10,-6],mur:[10,-8],gly:[4,16,"middle"],
+ dub:[10,4],dmi:[10,4],sp:[10,4],kra:[10,4],alx:[10,-6],vla:[10,-10],gus:[10,-6],mur:[10,-8],gly:[8,16],
  pnz:[10,14],nn:[-10,-10,"end"],div:[10,-8]};
 let selA=null;
 function drawCities(){
@@ -640,6 +758,7 @@ function drawCities(){
     const r=c.big?8:6;
     if(ckadSet.has(c.id))el("circle",{r:r+4.5,class:"ckad-st"},g);
     el("circle",{r},g);
+    if(c.big)el("circle",{r:2.6,class:"dot"},g);
     const [lx,ly,anc]=LABEL_POS[c.id]||[10,4];
     el("text",{x:lx,y:ly,"text-anchor":anc||"start"},g).textContent=c.exit?"→ "+c.n:c.n;
     g.addEventListener("pointerdown",e=>{e.stopPropagation();drag={mode:"city",id:c.id}});
@@ -779,7 +898,7 @@ function renderMapTab(){
     [sw(`<rect x="0" y="1" width="42" height="14" fill="var(--ckad)" opacity=".28"/><line x1="0" y1="8" x2="42" y2="8" stroke="var(--ckad)" stroke-width="2" stroke-dasharray="6 5"/>`),"ЦКАД"],
     [sw(`<line x1="0" y1="8" x2="42" y2="8" stroke="var(--bmo)" stroke-width="14" stroke-dasharray="2.5 5" opacity=".6"/>`),"Большое бетонное кольцо"],
     [sw(`<circle cx="21" cy="8" r="7" fill="none" stroke="var(--ckad)" stroke-width="2.5"/><circle cx="21" cy="8" r="3.6" fill="var(--city)" stroke="var(--cityRing)" stroke-width="1.6"/>`),"Станция на ЦКАД"],
-    [sw(`<circle cx="21" cy="8" r="5" fill="var(--land)" stroke="var(--cityRing)" stroke-width="1.6" stroke-dasharray="3 2"/>`),"Вылетное направление за край карты"],
+    [sw(`<circle cx="21" cy="8" r="5" fill="var(--panel)" stroke="var(--cityRing)" stroke-width="1.6" stroke-dasharray="3 2"/>`),"Вылетное направление за край карты"],
   ].map(([s,t])=>`${s}<span>${t}</span>`).join("");
   const total=tracks.reduce((a,t)=>a+t.cars,0);
   $("stats").innerHTML=`<div><b class="num">${Object.values(cities).filter(c=>!c.exit).length}</b><span>городов</span></div><div><b class="num">${tracks.length}</b><span>путей</span></div><div><b class="num">${total}</b><span>вагонов на карте</span></div>`;
@@ -812,10 +931,20 @@ function moveTip(e){const b=board.getBoundingClientRect();let x=e.clientX-b.left
   if(x+tip.offsetWidth>b.width-6)x=e.clientX-b.left-tip.offsetWidth-10;tip.style.left=x+"px";tip.style.top=y+"px"}
 function hideTip(){tip.hidden=true}
 let vb;
-function fit(){
+let vbFull;
+function computeFull(){
   const xs=[],ys=[];[...MOSCOW_OBL,...RYAZAN_OBL,...VLADIMIR_OBL].forEach(([lo,la])=>{const [x,y]=P(lo,la);xs.push(x);ys.push(y)});
   Object.values(cities).forEach(c=>{xs.push(c.x+90);ys.push(c.y+20)});
-  const pad=24;vb={x:Math.min(...xs)-pad,y:Math.min(...ys)-pad,w:Math.max(...xs)-Math.min(...xs)+pad*2,h:Math.max(...ys)-Math.min(...ys)+pad*2};applyVB();
+  const pad=24;vbFull={x:Math.min(...xs)-pad,y:Math.min(...ys)-pad,w:Math.max(...xs)-Math.min(...xs)+pad*2,h:Math.max(...ys)-Math.min(...ys)+pad*2};
+}
+function addGrain(){
+  const g=el("g",{class:"grain"},vp),X=vbFull;
+  el("rect",{x:X.x-400,y:X.y-400,width:X.w+800,height:X.h+800,filter:"url(#paperBlot)",opacity:.35},g);
+  el("rect",{x:X.x-400,y:X.y-400,width:X.w+800,height:X.h+800,filter:"url(#paperGrain)",opacity:.45},g);
+  el("rect",{x:X.x-400,y:X.y-400,width:X.w+800,height:X.h+800,fill:"url(#vignette)"},g);
+}
+function fit(){
+  vb={...vbFull};applyVB();
 }
 const applyVB=()=>svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
 function toSvg(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
@@ -854,7 +983,7 @@ $("modal").addEventListener("keydown",e=>{if(e.key==="Escape"&&$("pCancel"))clos
 // =====================================================================
 // BOOT
 // =====================================================================
-drawGeo();fit();renderMapTab();renderRules();render();showSetup();
+computeFull();drawGeo();addGrain();fit();renderMapTab();renderRules();render();showSetup();
 window.__oka={G:()=>G,newGame,tracks,cities,botTurn};
 })();
 </script>

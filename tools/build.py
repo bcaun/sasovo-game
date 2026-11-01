@@ -21,7 +21,7 @@ out = f"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Окская магистраль — железнодорожная стратегия по карте Подмосковья и Рязанской области.">
+<meta name="description" content="Дорога в Сасово — железнодорожная стратегия по карте Подмосковья и Рязанской области.">
 <style>:root{{color-scheme:light}}body{{margin:0}}img{{max-width:100%}}[hidden]{{display:none!important}}</style>
 {head.strip()}
 </head>

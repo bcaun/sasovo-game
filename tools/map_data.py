@@ -32,7 +32,7 @@ CITIES=[
 ]
 NUDGE={"sp":(-6,16),"klin":(-28,-14),"kub":(-34,4)}
 ROUTES=[
- ["msk","dom",["white","black"],"main"],["dom","bron",["red","blue"],"main"],["bron","kol",["yellow","green"],"main"],
+ ["msk","dom",["white"],"main"],["dom","bron",["red","blue"],"main"],["bron","kol",["yellow","green"],"main"],
  ["kol","luh",["purple","orange"],"main"],["luh","rya",["green","red"],"main"],["rya","kir",["blue","yellow"],"main"],
  ["kir","eka",["orange","purple"],"main"],["eka","shat",["black","white"],"main"],["shat","sas",["red","green"],"main"],
  ["msk","lyu",["gray"],"alt"],["lyu","ram",["gray"],"alt"],["ram","kur",["gray"],"alt"],["kur","eg",["gray"],"alt"],
@@ -47,7 +47,7 @@ ROUTES=[
  ["nf","che",["red"],"bmo"],["che","mihn",["purple"],"bmo"],["mihn","kol",["orange"],"bmo"],["kol","vos",["white"],"bmo"],
  ["vos","kur",["green"],"bmo"],["kur","oz",["red"],"bmo"],["oz","alx",["blue"],"bmo"],
  ["msk","odi",["blue"]],["odi","zven",["gray"]],["msk","ist",["white"]],["msk","sol",["orange"]],["msk","push",["yellow"]],
- ["push","kra",["gray"]],["msk","pod",["red","orange"]],
+ ["push","kra",["gray"]],["msk","pod",["red"]],
  ["zven","kub",["purple"]],["ist","klin",["gray"]],["sol","dmi",["black"]],["kra","sp",["red"]],["sp","alx",["gray"]],
  ["pod","che",["green"]],["dom","mihn",["black"]],
  ["klin","vol",["gray"]],["vol","shah",["gray"]],["vol","ruza",["yellow"]],["ruza","kub",["black"]],["ruza","moz",["gray"]],
