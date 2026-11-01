@@ -1,0 +1,406 @@
+{
+ "long": [
+  {
+   "a": "msk",
+   "b": "sas",
+   "pts": 21
+  },
+  {
+   "a": "shah",
+   "b": "pnz",
+   "pts": 33
+  },
+  {
+   "a": "dub",
+   "b": "div",
+   "pts": 30
+  },
+  {
+   "a": "moz",
+   "b": "nn",
+   "pts": 27
+  },
+  {
+   "a": "ser",
+   "b": "mur",
+   "pts": 20
+  },
+  {
+   "a": "klin",
+   "b": "sar",
+   "pts": 28
+  }
+ ],
+ "regular": [
+  {
+   "a": "ist",
+   "b": "sol",
+   "pts": 2
+  },
+  {
+   "a": "luh",
+   "b": "zar",
+   "pts": 2
+  },
+  {
+   "a": "bron",
+   "b": "lyu",
+   "pts": 3
+  },
+  {
+   "a": "kas",
+   "b": "shil",
+   "pts": 3
+  },
+  {
+   "a": "kash",
+   "b": "sprud",
+   "pts": 3
+  },
+  {
+   "a": "kol",
+   "b": "mihn",
+   "pts": 3
+  },
+  {
+   "a": "ozy",
+   "b": "vos",
+   "pts": 3
+  },
+  {
+   "a": "che",
+   "b": "dom",
+   "pts": 3
+  },
+  {
+   "a": "chu",
+   "b": "gly",
+   "pts": 3
+  },
+  {
+   "a": "kir",
+   "b": "sap",
+   "pts": 4
+  },
+  {
+   "a": "kra",
+   "b": "ram",
+   "pts": 4
+  },
+  {
+   "a": "kur",
+   "b": "nog",
+   "pts": 4
+  },
+  {
+   "a": "nf",
+   "b": "zven",
+   "pts": 4
+  },
+  {
+   "a": "nmi",
+   "b": "sko",
+   "pts": 4
+  },
+  {
+   "a": "oz",
+   "b": "sha",
+   "pts": 4
+  },
+  {
+   "a": "pit",
+   "b": "shat",
+   "pts": 4
+  },
+  {
+   "a": "rya",
+   "b": "spk",
+   "pts": 4
+  },
+  {
+   "a": "alx",
+   "b": "dmi",
+   "pts": 5
+  },
+  {
+   "a": "eka",
+   "b": "kas",
+   "pts": 5
+  },
+  {
+   "a": "kad",
+   "b": "pit",
+   "pts": 5
+  },
+  {
+   "a": "mih",
+   "b": "rzh",
+   "pts": 5
+  },
+  {
+   "a": "odi",
+   "b": "ruza",
+   "pts": 5
+  },
+  {
+   "a": "odi",
+   "b": "pod",
+   "pts": 5
+  },
+  {
+   "a": "dom",
+   "b": "push",
+   "pts": 6
+  },
+  {
+   "a": "ist",
+   "b": "pod",
+   "pts": 6
+  },
+  {
+   "a": "kur",
+   "b": "vla",
+   "pts": 6
+  },
+  {
+   "a": "lyu",
+   "b": "zven",
+   "pts": 6
+  },
+  {
+   "a": "ozy",
+   "b": "rya",
+   "pts": 6
+  },
+  {
+   "a": "chu",
+   "b": "erm",
+   "pts": 6
+  },
+  {
+   "a": "dmi",
+   "b": "vol",
+   "pts": 7
+  },
+  {
+   "a": "eg",
+   "b": "rya",
+   "pts": 7
+  },
+  {
+   "a": "eka",
+   "b": "pnz",
+   "pts": 7
+  },
+  {
+   "a": "luh",
+   "b": "nmi",
+   "pts": 7
+  },
+  {
+   "a": "rzh",
+   "b": "sprud",
+   "pts": 7
+  },
+  {
+   "a": "sas",
+   "b": "div",
+   "pts": 7
+  },
+  {
+   "a": "vla",
+   "b": "vos",
+   "pts": 8
+  },
+  {
+   "a": "kad",
+   "b": "tuma",
+   "pts": 8
+  },
+  {
+   "a": "kub",
+   "b": "mihn",
+   "pts": 8
+  },
+  {
+   "a": "pav",
+   "b": "sar",
+   "pts": 8
+  },
+  {
+   "a": "sol",
+   "b": "vol",
+   "pts": 8
+  },
+  {
+   "a": "che",
+   "b": "push",
+   "pts": 8
+  },
+  {
+   "a": "bron",
+   "b": "sol",
+   "pts": 9
+  },
+  {
+   "a": "dmi",
+   "b": "ruza",
+   "pts": 9
+  },
+  {
+   "a": "kad",
+   "b": "pnz",
+   "pts": 9
+  },
+  {
+   "a": "msk",
+   "b": "ozy",
+   "pts": 9
+  },
+  {
+   "a": "pod",
+   "b": "sha",
+   "pts": 9
+  },
+  {
+   "a": "sas",
+   "b": "tuma",
+   "pts": 9
+  },
+  {
+   "a": "bron",
+   "b": "spk",
+   "pts": 10
+  },
+  {
+   "a": "gus",
+   "b": "pit",
+   "pts": 10
+  },
+  {
+   "a": "kash",
+   "b": "kub",
+   "pts": 10
+  },
+  {
+   "a": "sap",
+   "b": "sprud",
+   "pts": 10
+  },
+  {
+   "a": "shat",
+   "b": "sko",
+   "pts": 10
+  },
+  {
+   "a": "dub",
+   "b": "nf",
+   "pts": 11
+  },
+  {
+   "a": "kash",
+   "b": "kra",
+   "pts": 11
+  },
+  {
+   "a": "klin",
+   "b": "sp",
+   "pts": 11
+  },
+  {
+   "a": "msk",
+   "b": "shah",
+   "pts": 11
+  },
+  {
+   "a": "ram",
+   "b": "ruza",
+   "pts": 11
+  },
+  {
+   "a": "alx",
+   "b": "che",
+   "pts": 12
+  },
+  {
+   "a": "eg",
+   "b": "pav",
+   "pts": 12
+  },
+  {
+   "a": "kir",
+   "b": "oz",
+   "pts": 12
+  },
+  {
+   "a": "kol",
+   "b": "moz",
+   "pts": 12
+  },
+  {
+   "a": "gly",
+   "b": "gus",
+   "pts": 13
+  },
+  {
+   "a": "erm",
+   "b": "vla",
+   "pts": 13
+  },
+  {
+   "a": "kub",
+   "b": "kur",
+   "pts": 13
+  },
+  {
+   "a": "mur",
+   "b": "vos",
+   "pts": 13
+  },
+  {
+   "a": "kol",
+   "b": "mur",
+   "pts": 14
+  },
+  {
+   "a": "oz",
+   "b": "nn",
+   "pts": 14
+  },
+  {
+   "a": "pav",
+   "b": "sha",
+   "pts": 14
+  },
+  {
+   "a": "gus",
+   "b": "mih",
+   "pts": 15
+  },
+  {
+   "a": "nog",
+   "b": "shil",
+   "pts": 15
+  },
+  {
+   "a": "ser",
+   "b": "tuma",
+   "pts": 15
+  },
+  {
+   "a": "eg",
+   "b": "gly",
+   "pts": 16
+  },
+  {
+   "a": "erm",
+   "b": "zar",
+   "pts": 16
+  },
+  {
+   "a": "kir",
+   "b": "sp",
+   "pts": 16
+  }
+ ]
+}

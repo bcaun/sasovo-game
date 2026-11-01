@@ -98,7 +98,8 @@ aside{display:flex;flex-direction:column;gap:12px;min-width:0}
 .ticket.done .meta{color:var(--good);opacity:1}
 .ticket.pick{outline:2px solid transparent}
 .ticket.pick[aria-pressed="true"]{outline:2.5px solid var(--accent)}
-.ticket.pick[aria-pressed="false"]{opacity:.55}
+.ticket.pick[aria-pressed="false"]{opacity:.7}
+.ticket.pick[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--accent)}
 
 .log{font-size:12.5px;color:var(--muted);max-height:150px;overflow:auto;display:flex;flex-direction:column;gap:2px}
 .log div b{color:var(--ink)}
@@ -369,13 +370,10 @@ function shortest(s,t,costFn){
   return {cars:d[t],nodes:nodes.reverse(),keys:keys.reverse()};
 }
 
-const LONG_T=[["msk","sas"],["shah","pnz"],["dub","div"],["moz","nn"],["ser","mur"],["alx","sko"]];
-const SHORT_T=[["msk","kol"],["msk","vla"],["vla","rya"],["mur","kas"],["klin","kol"],["sp","ser"],["moz","rya"],
- ["sha","rzh"],["nf","tuma"],["dmi","sko"],["ist","kad"],["eg","shat"],["pod","sar"],["ser","pav"],["alx","luh"],
- ["vol","erm"],["zven","spk"],["gus","sko"],["kash","tuma"],["oz","mih"],["sp","eka"],["rya","pnz"],["kas","nn"],
- ["sas","div"],["kur","gly"],["bron","chu"],["dom","nmi"],["zar","shil"],["msk","rya"],["vla","sas"]];
-const mkTicket=([a,b],long)=>{const p=shortest(a,b);return {a,b,pts:p.cars+(long?4:0),long}};
-const LONG_TICKETS=LONG_T.map(x=>mkTicket(x,true)), SHORT_TICKETS=SHORT_T.map(x=>mkTicket(x,false));
+// колода маршрутов: tools/tickets.json (собирает tools/make_tickets.py)
+const LONG_TICKETS=TICKET_DATA.long.map(t=>({...t,long:true}));
+const REGULAR_TICKETS=TICKET_DATA.regular.map(t=>({...t,long:false}));
+const START_REGULAR=4, START_MIN=2, DRAW_TICKETS=3, DRAW_MIN=1;
 const tName=t=>`${cities[t.a].n} — ${cities[t.b].exit?"напр. "+cities[t.b].n:cities[t.b].n}`;
 
 // =====================================================================
@@ -400,7 +398,7 @@ function newGame(cfg){
   const deck=[];CARD_COLORS.forEach(c=>{for(let i=0;i<12;i++)deck.push(c)});for(let i=0;i<14;i++)deck.push("loco");
   G={players:cfg.map((c,i)=>({name:c.name,bot:c.bot,color:PLAYER_COLORS[i][0],cars:CARS_PER_PLAYER,score:0,
       hand:Object.fromEntries([...CARD_COLORS,"loco"].map(k=>[k,0])),tickets:[]})),
-    deck:shuffle(deck),discard:[],market:[],shortDeck:shuffle(SHORT_TICKETS.map(t=>({...t}))),longDeck:shuffle(LONG_TICKETS.map(t=>({...t}))),
+    deck:shuffle(deck),discard:[],market:[],shortDeck:shuffle(REGULAR_TICKETS.map(t=>({...t}))),longDeck:shuffle(LONG_TICKETS.map(t=>({...t}))),longOut:[],
     owner:{},turn:0,drawn:0,finalLeft:null,over:false,log:[],setupQueue:[]};
   G.players.forEach(p=>{for(let i=0;i<4;i++)p.hand[drawDeck()]++});
   refillMarket();
@@ -429,21 +427,22 @@ const viewer=()=>{if(!cur().bot)return cur();return G.players.find(p=>!p.bot)||c
 function nextSetup(){
   if(!G.setupQueue.length){G.phase="play";startTurn();return}
   const i=G.setupQueue.shift(),p=G.players[i];
-  const offer=[G.longDeck.pop(),G.shortDeck.pop(),G.shortDeck.pop(),G.shortDeck.pop()].filter(Boolean);
+  const offer=[G.longDeck.pop(),...G.shortDeck.splice(-START_REGULAR)].filter(Boolean);
   G.phase="setup";G.turn=i;
-  if(p.bot){keepTickets(p,botChooseTickets(p,offer,2),offer);nextSetup()}
-  else showTicketChoice(p,offer,2,()=>nextSetup());
+  if(p.bot){keepTickets(p,botChooseTickets(p,offer,START_MIN),offer);nextSetup()}
+  else showTicketChoice(p,offer,START_MIN,()=>nextSetup(),true);
 }
 function keepTickets(p,keep,offer){
   keep.forEach(t=>p.tickets.push(t));
-  offer.filter(t=>!keep.includes(t)).forEach(t=>(t.long?G.longDeck:G.shortDeck).unshift(t));
+  // отказ от дальнего маршрута окончательный: он уходит из игры; обычные — под низ колоды
+  offer.filter(t=>!keep.includes(t)).forEach(t=>t.long?G.longOut.push(t):G.shortDeck.unshift(t));
   log(`<b>${esc(p.name)}</b> оставляет билетов: ${keep.length}.`);
 }
 function takeTicketsAction(){
   if(!canAct()||G.drawn>0)return;
-  const p=cur(),offer=[G.shortDeck.pop(),G.shortDeck.pop(),G.shortDeck.pop()].filter(Boolean);
+  const p=cur(),offer=G.shortDeck.splice(-DRAW_TICKETS);
   if(!offer.length){flash("Билеты закончились.");return}
-  showTicketChoice(p,offer,1,()=>endTurn());
+  showTicketChoice(p,offer,DRAW_MIN,()=>endTurn(),false);
 }
 
 // ----- connectivity -----
@@ -565,8 +564,8 @@ function botTurn(){
   for(const t of needs){const o=payOptions(p,t);if(o.length){claim(pi,t,o[0]);return}}
   if(!needs.length){
     if(G.shortDeck.length&&p.cars>12&&p.tickets.length<7){
-      const offer=[G.shortDeck.pop(),G.shortDeck.pop(),G.shortDeck.pop()].filter(Boolean);
-      keepTickets(p,botChooseTickets(p,offer,1),offer);endTurn();return}
+      const offer=G.shortDeck.splice(-DRAW_TICKETS);
+      keepTickets(p,botChooseTickets(p,offer,DRAW_MIN),offer);endTurn();return}
     const any=tracks.filter(t=>!trackBlockReason(pi,t)&&t.cars>=2).sort((a,b)=>b.cars-a.cars);
     for(const t of any){const o=payOptions(p,t);if(o.length){claim(pi,t,o[0]);return}}
   }
@@ -840,15 +839,17 @@ function showSetup(){
   $("sGo").onclick=()=>{const n=+$("sN").value;const cfg=[];for(let i=0;i<n;i++)cfg.push({name:$("sName"+i).value.trim()||PLAYER_COLORS[i][1],bot:$("sBot"+i).checked});
     $("modal").hidden=true;newGame(cfg)};
 }
-function showTicketChoice(p,offer,min,done){
-  const sel=new Set(offer.map((_,i)=>i));
-  openModal(`<h3>${esc(p.name)}: маршрутные билеты</h3>
-   <p>Оставьте не меньше ${min}. Выполненный билет приносит очки, невыполненный в конце вычитается.</p>
-   <div class="tlist" id="offer" style="max-height:none">${offer.map((t,i)=>ticketHTML(t," pick",`data-o="${i}" aria-pressed="true"`)).join("")}</div>
-   <div class="row"><button class="primary" id="oOk">Оставить выбранные</button><span class="status" id="oMsg"></span></div>`);
+function showTicketChoice(p,offer,min,done,start){
+  const sel=new Set();
+  const hasLong=offer.some(t=>t.long);
+  openModal(`<h3>${esc(p.name)}: ${start?"стартовые маршруты":"новые маршруты"}</h3>
+   <p>Нажмите на билеты, которые оставляете: от ${min} до ${offer.length}. Выполненный билет в конце приносит его очки, невыполненный столько же отнимает.</p>
+   ${hasLong?`<p><b>Дальний маршрут</b> можно взять только сейчас. Если отказаться, он уйдёт из игры, и добрать его потом будет нельзя.</p>`:""}
+   <div class="tlist" id="offer" style="max-height:none">${offer.map((t,i)=>ticketHTML(t," pick",`data-o="${i}" aria-pressed="false"`)).join("")}</div>
+   <div class="row"><button class="primary" id="oOk" disabled>Оставить выбранные</button><span class="status num" id="oMsg"></span></div>`);
+  const upd=()=>{$("oOk").disabled=sel.size<min;$("oMsg").textContent=`выбрано ${sel.size} из ${offer.length}, минимум ${min}`};upd();
   $("offer").querySelectorAll("[data-o]").forEach(b=>{
-    b.onclick=()=>{const i=+b.dataset.o;sel.has(i)?sel.delete(i):sel.add(i);b.setAttribute("aria-pressed",sel.has(i));
-      $("oOk").disabled=sel.size<min};
+    b.onclick=()=>{const i=+b.dataset.o;sel.has(i)?sel.delete(i):sel.add(i);b.setAttribute("aria-pressed",sel.has(i));upd()};
     b.onmouseenter=()=>{const t=offer[+b.dataset.o];setHL(shortest(t.a,t.b))};
   });
   $("oOk").onclick=()=>{if(sel.size<min)return;keepTickets(p,offer.filter((_,i)=>sel.has(i)),offer);
@@ -906,11 +907,11 @@ function renderMapTab(){
 function renderRules(){
   $("rulesBox").innerHTML=`<h2>Правила</h2>
   <p>2–4 игрока, любой из них может быть ботом. У каждого ${CARS_PER_PLAYER} вагонов. Цель — набрать больше очков, соединяя города из своих маршрутных билетов.</p>
-  <h4>Подготовка</h4><ul><li>Каждому 4 карты вагонов, на рынке 5 открытых карт.</li><li>Каждому 1 дальний и 3 обычных билета, оставить минимум 2.</li></ul>
+  <h4>Подготовка</h4><ul><li>Каждому 4 карты вагонов, на рынке 5 открытых карт.</li><li>Каждому 1 дальний и 4 обычных маршрута, всего 5. Оставить нужно минимум 2, можно все.</li><li>Дальний маршрут дают только при старте. Если от него отказаться, он уходит из игры.</li></ul>
   <h4>Ход — одно из трёх</h4><ul>
    <li><b>Взять 2 карты</b> с рынка или из колоды. Тепловоз с рынка можно взять только первой картой, и он заменяет обе. Если на рынке 3 тепловоза, рынок обновляется.</li>
    <li><b>Построить перегон</b>: сбросить столько карт его цвета, сколько в нём вагонов. Тепловоз заменяет любой цвет. Серый перегон строится картами любого одного цвета.</li>
-   <li><b>Взять 3 билета</b> и оставить минимум 1.</li></ul>
+   <li><b>Взять 3 обычных маршрута</b> и оставить минимум 1. Дальние в игре больше не раздаются.</li></ul>
   <h4>Особые пути</h4><ul>
    <li><b>Скоростная линия</b> (Москва — Ногинск — Орехово-Зуево — Владимир): платите на 1 карту больше, чем ставите вагонов, и получаете +${EXPRESS_BONUS} очка.</li>
    <li><b>Двойной перегон</b>: один игрок не может занять оба пути. При 2–3 игроках второй путь закрывается после первой постройки.</li>
@@ -919,6 +920,11 @@ function renderRules(){
   <h4>Конец игры</h4><ul><li>Когда у игрока остаётся 2 вагона или меньше, каждый делает ещё один ход.</li>
    <li>Выполненные билеты прибавляются, невыполненные вычитаются.</li>
    <li>Бонусы: +${RING_BONUS} за больше всех перегонов ЦКАД, +${RING_BONUS} за больше всех перегонов БМО, +${LONGEST_BONUS} за самую длинную непрерывную дорогу.</li></ul>
+  <h4>Колода маршрутов: 80 билетов</h4>
+  <p>Очки билета равны длине кратчайшего пути в вагонах.</p>
+  <ul><li>6 дальних, от 20 вагонов.</li><li>74 обычных: 17 коротких (2–4), 40 средних (5–11), 17 длинных (12–16).</li></ul>
+  <div class="tablewrap"><table class="res"><tr><th>Ценность</th>${[...new Set(REGULAR_TICKETS.map(t=>t.pts))].sort((a,b)=>a-b).map(v=>`<th>${v}</th>`).join("")}</tr>
+   <tr><td>Билетов</td>${[...new Set(REGULAR_TICKETS.map(t=>t.pts))].sort((a,b)=>a-b).map(v=>`<td class="num">${REGULAR_TICKETS.filter(t=>t.pts===v).length}</td>`).join("")}</tr></table></div>
   <h4>Дальние маршруты</h4><div class="tlist" style="max-height:none">${LONG_TICKETS.map(t=>ticketHTML(t)).join("")}</div>`;
 }
 
