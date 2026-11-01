@@ -42,6 +42,28 @@ h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,28px
 svg#map{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 svg#map.panning{cursor:grabbing}
 .zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+.zoom button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.bplayers{position:absolute;right:54px;top:10px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;pointer-events:none;max-width:calc(100% - 120px)}
+.bplayers div{display:flex;align-items:center;gap:6px;font-family:var(--font-map);font-size:12.5px;color:var(--mapInk);background:color-mix(in srgb,var(--paper) 90%,transparent);border:1px solid var(--mapMuted);border-radius:3px;padding:2px 7px}
+.bplayers div.cur{outline:2px solid var(--mapInk)}
+.bplayers i{width:11px;height:11px;border-radius:50%;border:1.5px solid #1b1309;flex:none}
+.bplayers b{font-family:var(--font-display)}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 140px);background:var(--paper);color:var(--mapInk);border:1.5px solid var(--mapInk);border-radius:4px;
+  padding:7px 14px;font-family:var(--font-map);font-size:14px;box-shadow:0 4px 14px rgba(40,25,10,.3);display:flex;gap:8px;align-items:center;z-index:6;pointer-events:none}
+.toast i{width:12px;height:12px;border-radius:50%;border:1.5px solid #1b1309;flex:none}
+.fly{position:fixed;width:66px;height:46px;z-index:30;pointer-events:none;border-radius:4px;box-shadow:0 6px 16px rgba(40,25,10,.4)}
+.fly svg{width:100%;height:100%;display:block}
+@media (prefers-reduced-motion:no-preference){
+  .fly{transition:transform .65s cubic-bezier(.5,0,.3,1),opacity .65s ease-in}
+  .toast{animation:toastIn .3s ease-out}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}}
+  .trk.fresh .car{transform-box:fill-box;transform-origin:center;animation:carIn .45s cubic-bezier(.3,1.6,.5,1) backwards;animation-delay:calc(var(--i)*110ms)}
+  @keyframes carIn{from{transform:scale(0);opacity:0}}
+  .ownband.fresh{animation:bandIn 1.6s ease-out}
+  @keyframes bandIn{0%{stroke-width:44;opacity:.95}100%{stroke-width:15}}
+  .pl.got{animation:rowPulse .7s ease-out}
+  @keyframes rowPulse{0%{box-shadow:0 0 0 0 var(--accent)}100%{box-shadow:0 0 0 8px transparent}}
+}
 .zoom button{width:34px;height:34px;font-size:18px;padding:0}
 button{font-family:var(--font-body);font-size:14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 10px;cursor:pointer}
 button:hover:not(:disabled){border-color:var(--accent)}
@@ -182,7 +204,13 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 .trk:hover .car{stroke:var(--mapInk);stroke-width:1.6}
 .trk.on .car{stroke:#ffcc33;stroke-width:2.6}
 .trk.owned .car{stroke:#1b1309;stroke-width:1.6}
-.trk.blocked{opacity:.25}
+.ownband{fill:none;stroke-linecap:round;stroke-width:15;opacity:.55}
+.badge circle{stroke:#fffaf0;stroke-width:1.8}
+.badge text{font-family:var(--font-display);font-weight:700;font-size:9.5px;fill:#fff;pointer-events:none}
+.blockline{stroke:var(--mapMuted);stroke-width:2;stroke-dasharray:2 4;fill:none;opacity:.8}
+.focus-owned .trk:not(.owned){opacity:.16}
+.focus-owned .casing{opacity:.08}
+.trk.blocked .car{display:none}
 .trk.can .car{stroke:#1f6f8b;stroke-width:2}
 .dim .trk:not(.on):not(.owned){opacity:.3}
 .dim .casing{opacity:.12}
@@ -203,7 +231,7 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 <header>
   <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.5</span>
+  <span class="tag">v0.6</span>
 </header>
 
 <div class="wrap">
@@ -215,9 +243,12 @@ table.res th:first-child,table.res td:first-child{text-align:left}
       <button id="zin" aria-label="Приблизить">+</button>
       <button id="zout" aria-label="Отдалить">−</button>
       <button id="zfit" aria-label="Показать всю карту">⤢</button>
+      <button id="zown" aria-label="Выделить занятые перегоны" aria-pressed="false" title="Выделить занятые перегоны"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="1" y="5" width="6" height="6" rx="1" fill="currentColor"/><rect x="9" y="5" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2 1.5"/></svg></button>
     </div>
     <div class="tip" id="tip" hidden></div>
     <div class="hint" id="hint"></div>
+    <div class="bplayers" id="bplayers"></div>
+    <div class="toast" id="toast" hidden></div>
   </div>
 
   <aside>
@@ -420,7 +451,10 @@ function refillMarket(){
   }
 }
 const cur=()=>G.players[G.turn];
-const viewer=()=>{if(!cur().bot)return cur();return G.players.find(p=>!p.bot)||cur()};
+const humans=()=>G.players.filter(p=>!p.bot);
+const hotSeat=()=>humans().length>1;
+// при нескольких живых игроках рука видна только тому, кто подтвердил, что сейчас его ход
+const viewer=()=>{if(!hotSeat())return humans()[0]||null;return !cur().bot&&G.revealed===G.turn?cur():null};
 
 // ----- tickets -----
 function nextSetup(){
@@ -429,6 +463,7 @@ function nextSetup(){
   const offer=[G.longDeck.pop(),...G.shortDeck.splice(-START_REGULAR)].filter(Boolean);
   G.phase="setup";G.turn=i;
   if(p.bot){keepTickets(p,botChooseTickets(p,offer,START_MIN),offer);nextSetup()}
+  else if(hotSeat())showPass(p,()=>showTicketChoice(p,offer,START_MIN,()=>nextSetup(),true));
   else showTicketChoice(p,offer,START_MIN,()=>nextSetup(),true);
 }
 function keepTickets(p,keep,offer){
@@ -436,6 +471,7 @@ function keepTickets(p,keep,offer){
   // отказ от дальнего маршрута окончательный: он уходит из игры; обычные — под низ колоды
   offer.filter(t=>!keep.includes(t)).forEach(t=>t.long?G.longOut.push(t):G.shortDeck.unshift(t));
   log(`<b>${esc(p.name)}</b> оставляет билетов: ${keep.length}.`);
+  if(G.phase==="play")toast(p,`берёт маршруты: оставляет ${keep.length} из ${offer.length}`);
 }
 function takeTicketsAction(){
   if(!canAct()||G.drawn>0)return;
@@ -484,23 +520,51 @@ function claim(pi,t,opt){
   if(opt.use){p.hand[opt.c]-=opt.use;for(let i=0;i<opt.use;i++)G.discard.push(opt.c)}
   if(opt.loco){p.hand.loco-=opt.loco;for(let i=0;i<opt.loco;i++)G.discard.push("loco")}
   G.owner[t.id]=pi;p.cars-=t.cars;const pts=trackPoints(t);p.score+=pts;
+  G.fresh={id:t.id,ts:Date.now()};
+  toast(p,`строит ${cities[t.a].n} — ${cities[t.b].n}: ${t.cars} ваг., +${pts}`);
   log(`<b>${esc(p.name)}</b> строит ${esc(cities[t.a].n)} — ${esc(cities[t.b].n)} (${t.cars} ваг., +${pts}).`);
   refreshTicketStatus(pi);
   endTurn();
+}
+
+// ----- animation helpers -----
+const reduceMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+let flyQueue=[];
+const rectOf=sel=>{const e=document.querySelector(sel);if(!e||!e.getClientRects().length)return null;const r=e.getBoundingClientRect();return r.width?r:null};
+// card faces travel from the market/deck to the player who took them (applied after the next render)
+function queueFly(pi,src,card,hidden){if(src)flyQueue.push({pi,src,html:hidden?backFace:card==="loco"?locoFace:wagonFace(card)})}
+function flushFly(){
+  const q=flyQueue;flyQueue=[];
+  q.forEach(f=>{
+    const v=viewer(),to=(v&&G.players[f.pi]===v&&rectOf("#hand"))||rectOf(`#players [data-pi="${f.pi}"]`)||rectOf(`#bplayers [data-pi="${f.pi}"]`);
+    const row=document.querySelector(`#players [data-pi="${f.pi}"]`);if(row){row.classList.remove("got");void row.offsetWidth;row.classList.add("got")}
+    if(!to||reduceMotion())return;
+    const d=document.createElement("div");d.className="fly";d.innerHTML=f.html;
+    d.style.left=f.src.left+"px";d.style.top=f.src.top+"px";document.body.appendChild(d);
+    const dx=to.left+Math.min(to.width/2,120)-33-f.src.left,dy=to.top+to.height/2-23-f.src.top;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.transform=`translate(${dx}px,${dy}px) scale(.55)`;d.style.opacity=".15"}));
+    setTimeout(()=>d.remove(),800);
+  });
+}
+let toastT;
+function toast(p,text){
+  const t=$("toast");t.innerHTML=`<i style="background:${p.color}"></i><span><b>${esc(p.name)}</b> ${esc(text)}</span>`;t.hidden=false;
+  clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);
 }
 
 // ----- drawing cards -----
 function takeMarket(i){
   if(!canAct())return;const c=G.market[i];if(!c)return;
   if(c==="loco"&&G.drawn>0){flash("Тепловоз с рынка можно взять только первой картой.");return}
-  const p=cur();p.hand[c]++;G.market.splice(i,1);refillMarket();
+  const p=cur();queueFly(G.turn,rectOf(`#market [data-m="${i}"]`),c,false);
+  p.hand[c]++;G.market.splice(i,1);refillMarket();
   log(`<b>${esc(p.name)}</b> берёт с рынка: ${c==="loco"?"тепловоз":COLORS[c][1]}.`);
   if(c==="loco"){endTurn();return}
   afterDraw();
 }
 function takeDeck(){
-  if(!canAct())return;const c=drawDeck();if(!c){flash("Колода пуста.");return}
-  cur().hand[c]++;log(`<b>${esc(cur().name)}</b> берёт карту из колоды.`);afterDraw();
+  if(!canAct())return;const src=rectOf("#deckBtn"),c=drawDeck();if(!c){flash("Колода пуста.");return}
+  queueFly(G.turn,src,c,false);cur().hand[c]++;log(`<b>${esc(cur().name)}</b> берёт карту из колоды.`);afterDraw();
 }
 function afterDraw(){
   G.drawn++;
@@ -509,10 +573,17 @@ function afterDraw(){
 }
 
 // ----- turn flow -----
-const canAct=()=>G&&G.phase==="play"&&!G.over&&!cur().bot&&$("modal").hidden;
+const canAct=()=>G&&G.phase==="play"&&!G.over&&!cur().bot&&$("modal").hidden&&(!hotSeat()||G.revealed===G.turn);
 function startTurn(){
-  G.drawn=0;clearHL();render();
-  if(cur().bot)setTimeout(botTurn,650);
+  G.drawn=0;G.revealed=null;clearHL();render();
+  if(cur().bot){const g0=G;setTimeout(()=>{if(G===g0)botTurn()},950);return}
+  if(hotSeat())showPass(cur(),()=>{G.revealed=G.turn;render()});
+}
+function showPass(p,go){
+  openModal(`<h3>Передайте ход: <span style="color:${p.color}">${esc(p.name)}</span></h3>
+   <p>Рука и маршруты скрыты, пока ${esc(p.name)} не нажмёт кнопку. Остальным лучше не смотреть.</p>
+   <div class="row"><button class="primary" id="passGo">Я ${esc(p.name)}, показать мои карты</button></div>`);
+  $("passGo").onclick=()=>{$("modal").hidden=true;go()};
 }
 function endTurn(){
   const p=cur();
@@ -572,13 +643,15 @@ function botTurn(){
   const want=new Set(needs.map(t=>t.color).filter(c=>c!=="gray"));
   const drawOne=first=>{
     const i=G.market.findIndex(c=>want.has(c));
-    if(i>=0){const c=G.market[i];p.hand[c]++;G.market.splice(i,1);refillMarket();log(`<b>${esc(p.name)}</b> берёт с рынка: ${COLORS[c][1]}.`);return true}
-    if(first&&G.market.includes("loco")&&Math.random()<.35){const j=G.market.indexOf("loco");p.hand.loco++;G.market.splice(j,1);refillMarket();log(`<b>${esc(p.name)}</b> берёт тепловоз.`);return "loco"}
-    const c=drawDeck();if(c){p.hand[c]++;log(`<b>${esc(p.name)}</b> берёт карту из колоды.`);return true}
-    const k=G.market.findIndex(c=>c!=="loco");if(k>=0){const c2=G.market[k];p.hand[c2]++;G.market.splice(k,1);refillMarket();return true}
+    if(i>=0){const c=G.market[i];queueFly(pi,rectOf(`#market [data-m="${i}"]`),c,false);p.hand[c]++;G.market.splice(i,1);refillMarket();log(`<b>${esc(p.name)}</b> берёт с рынка: ${COLORS[c][1]}.`);return true}
+    if(first&&G.market.includes("loco")&&Math.random()<.35){const j=G.market.indexOf("loco");queueFly(pi,rectOf(`#market [data-m="${j}"]`),"loco",false);p.hand.loco++;G.market.splice(j,1);refillMarket();log(`<b>${esc(p.name)}</b> берёт тепловоз.`);return "loco"}
+    const src=rectOf("#deckBtn"),c=drawDeck();if(c){queueFly(pi,src,c,true);p.hand[c]++;log(`<b>${esc(p.name)}</b> берёт карту из колоды.`);return true}
+    const k=G.market.findIndex(c=>c!=="loco");if(k>=0){const c2=G.market[k];queueFly(pi,rectOf(`#market [data-m="${k}"]`),c2,false);p.hand[c2]++;G.market.splice(k,1);refillMarket();return true}
     return false};
   const r=drawOne(true);
-  if(r===true)drawOne(false);
+  if(r===true){toast(p,"берёт карты");G.drawn=1;render();const g0=G;
+    setTimeout(()=>{if(G!==g0||G.over)return;drawOne(false);endTurn()},800);return}
+  if(r==="loco")toast(p,"берёт тепловоз с рынка");
   if(r===false){
     // nothing to draw: build anything possible
     const any=tracks.filter(t=>!trackBlockReason(pi,t)).sort((a,b)=>b.cars-a.cars);
@@ -718,7 +791,9 @@ function drawRoutes(){
     const n=t.cars,off=t.lane*OFF,sx=A.x+ux*R+nx*off,sy=A.y+uy*R+ny*off,len=L-2*R,cl=(len-GAP*(n+1))/n,ang=Math.atan2(dy,dx)*180/Math.PI;
     if(t.type==="exp"||t.type==="main")el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"casing "+(t.type==="exp"?"express":"main"),"stroke-width":17},gCas);
     const own=G?G.owner[t.id]:undefined;
-    let cls="trk";
+    const fresh=G&&G.fresh&&G.fresh.id===t.id&&Date.now()-G.fresh.ts<1600;
+    if(own!==undefined)el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"ownband"+(fresh?" fresh":""),stroke:G.players[own].color},gCas);
+    let cls="trk"+(fresh?" fresh":"");
     if(hl.keys.has(t.key))cls+=" on";
     if(own!==undefined)cls+=" owned";
     else if(G&&G.phase==="play"){const r=trackBlockReason(G.turn,t);if(r&&groups[t.key].some(x=>G.owner[x.id]!==undefined))cls+=" blocked";
@@ -726,12 +801,16 @@ function drawRoutes(){
     const g=el("g",{class:cls,"data-id":t.id},gRoutes);
     el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"halo"},g);
     const fill=own!==undefined?G.players[own].color:COLORS[t.color][0];
+    if(cls.includes("blocked"))el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"blockline"},g);
     for(let k=0;k<n;k++){const d=GAP+cl/2+k*(cl+GAP),cx=sx+ux*d,cy=sy+uy*d;
-      el("rect",{x:-cl/2,y:-H/2,width:cl,height:H,rx:1.5,class:"car",fill,transform:`translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${ang.toFixed(1)})`},g);
-      if(own!==undefined)el("circle",{r:1.8,fill:"#fff",transform:`translate(${cx.toFixed(1)} ${cy.toFixed(1)})`},g)}
+      const cg=el("g",{transform:`translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${ang.toFixed(1)})`},g);
+      el("rect",{x:-cl/2,y:-H/2,width:cl,height:H,rx:1.5,class:"car",fill,style:`--i:${k}`},cg);
+      if(own!==undefined)el("circle",{r:1.8,fill:"#fff"},cg)}
+    if(own!==undefined){const q=G.players[own],mx=sx+ux*len/2,my=sy+uy*len/2,b=el("g",{class:"badge",transform:`translate(${mx.toFixed(1)} ${my.toFixed(1)})`},g);
+      el("circle",{r:7.5,fill:q.color},b);el("text",{y:3.4,"text-anchor":"middle"},b).textContent=q.name.trim().charAt(0).toUpperCase()}
     g.addEventListener("pointerenter",e=>{
       const extra=t.type==="exp"?` · платите ${cardCost(t)} карт`:"";
-      const who=own!==undefined?` · занят: ${G.players[own].name}`:"";
+      const who=own!==undefined?` · занят: ${G.players[own].name}`:cls.includes("blocked")?" · закрыт (второй путь уже занят)":"";
       showTip(e,`${A.n} — ${B.n} · ${n} ваг. · ${COLORS[t.color][1]} · ${TYPES[t.type].name}${extra} · ${trackPoints(t)} оч.${who}`)});
     g.addEventListener("pointermove",moveTip);g.addEventListener("pointerleave",hideTip);
     g.addEventListener("pointerdown",e=>{e.stopPropagation();drag={mode:"track",id:t.id}});
@@ -819,13 +898,15 @@ function render(){
   $("turnTitle").innerHTML=G.over?"Игра окончена":`Ход: <span style="color:${p.color}">${esc(p.name)}</span>${p.bot?" (бот)":""}`;
   let st="";
   if(G.over)st="Нажмите «Новая игра», чтобы сыграть ещё раз.";
-  else if(p.bot)st="Бот думает…";
+  else if(p.bot)st="Ходит бот…";
+  else if(hotSeat()&&G.revealed!==G.turn)st=`Передайте устройство: ходит ${p.name}.`;
   else if(G.drawn===1)st="Возьмите вторую карту: из колоды или с рынка (кроме тепловоза).";
   else st="Возьмите 2 карты, постройте перегон (подсвечены доступные) или возьмите билеты.";
   if(G.finalLeft!==null&&!G.over)st+=` Последний круг: ходов осталось ${G.finalLeft}.`;
   $("status").textContent=st;
   $("hint").textContent=mode==="game"?(G.over?"Игра окончена. Наведите на перегон, чтобы увидеть владельца.":"Нажмите перегон, чтобы построить. Наведите, чтобы увидеть цену."):"Нажмите два города, чтобы проложить путь.";
-  $("players").innerHTML=G.players.map((q,i)=>`<div class="pl${i===G.turn&&!G.over?" cur":""}"><i style="background:${q.color}"></i>
+  $("bplayers").innerHTML=G.players.map((q,i)=>`<div data-pi="${i}" class="${i===G.turn&&!G.over?"cur":""}"><i style="background:${q.color}"></i>${esc(q.name)} <b>${q.score}</b></div>`).join("");
+  $("players").innerHTML=G.players.map((q,i)=>`<div data-pi="${i}" class="pl${i===G.turn&&!G.over?" cur":""}"><i style="background:${q.color}"></i>
     <span>${esc(q.name)}${q.bot?" · бот":""}</span><span class="num" title="Очки за перегоны"><b>${q.score}</b> оч</span>
     <span class="num" title="Вагонов осталось"><b>${q.cars}</b> ваг</span><span class="num" title="Карт в руке">${Object.values(q.hand).reduce((a,b)=>a+b,0)} карт</span></div>`).join("");
   // market
@@ -836,6 +917,12 @@ function render(){
   $("market").querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>takeMarket(+b.dataset.m));
   $("deckBtn").onclick=takeDeck;
   // hand
+  if(!v){
+    $("handTitle").textContent="Рука скрыта";$("handCount").textContent="";
+    $("hand").innerHTML=`<span class="status">${p.bot?"Ходит бот.":`Ждём, пока ${esc(p.name)} откроет свои карты.`}</span>`;
+    $("tCount").textContent="";$("myTickets").innerHTML=`<span class="status">Маршруты видит только игрок, чей ход.</span>`;
+    $("btnTickets").disabled=true;$("log").innerHTML=G.log.slice(0,40).map(l=>`<div>${l}</div>`).join("");flushFly();return;
+  }
   $("handTitle").textContent=v===p?"Ваша рука":`Рука: ${v.name}`;
   const keys=[...CARD_COLORS,"loco"].filter(k=>v.hand[k]>0);
   $("hand").innerHTML=keys.length?keys.map(k=>cardHTML(k,v.hand[k],'tabindex="-1" class-static')).join(""):`<span class="status">Карт нет.</span>`;
@@ -848,6 +935,7 @@ function render(){
   $("myTickets").innerHTML=v.tickets.length?v.tickets.map((t,i)=>ticketHTML(t,"",`data-t="${i}"`)).join(""):`<span class="status">Билетов пока нет.</span>`;
   $("myTickets").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const t=v.tickets[+b.dataset.t];setHL(shortest(t.a,t.b))});
   $("log").innerHTML=G.log.slice(0,40).map(l=>`<div>${l}</div>`).join("");
+  flushFly();
 }
 
 let flashT;
@@ -862,6 +950,7 @@ function closeModal(){$("modal").hidden=true;render()}
 function showSetup(){
   const def=[["Игрок 1",false],["Бот Ока",true],["Бот Клязьма",true],["Игрок 4",false]];
   openModal(`<h3>Новая игра</h3>
+   <p>Играть с друзьями можно на одном устройстве: снимите галочку «бот» у нужных игроков. Перед каждым ходом игра попросит передать устройство и спрячет чужие карты.</p>
    <p>Цель — соединять города из маршрутных билетов. От Москвы до Сасово ведут три пути: основная магистраль, запасной путь и северный ход через Владимир.</p>
    <label class="row">Игроков: <select id="sN"><option>2</option><option selected>3</option><option>4</option></select></label>
    <div id="sRows" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -870,7 +959,7 @@ function showSetup(){
       <input type="text" id="sName${i}" value="${esc(nm)}" aria-label="Имя игрока ${i+1}"><label><input type="checkbox" id="sBot${i}" ${b?"checked":""}> бот</label></div>`).join("")};
   rows();$("sN").onchange=rows;
   $("sGo").onclick=()=>{const n=+$("sN").value;const cfg=[];for(let i=0;i<n;i++)cfg.push({name:$("sName"+i).value.trim()||PLAYER_COLORS[i][1],bot:$("sBot"+i).checked});
-    $("modal").hidden=true;newGame(cfg)};
+    $("modal").hidden=true;flyQueue=[];newGame(cfg)};
 }
 function showTicketChoice(p,offer,min,done,start){
   const sel=new Set();
@@ -990,6 +1079,7 @@ function toSvg(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;retur
 function zoom(f,cx,cy){if(cx===undefined){cx=vb.x+vb.w/2;cy=vb.y+vb.h/2}const nw=Math.min(3200,Math.max(180,vb.w*f)),k=nw/vb.w;
   vb={x:cx-(cx-vb.x)*k,y:cy-(cy-vb.y)*k,w:vb.w*k,h:vb.h*k};applyVB()}
 svg.addEventListener("wheel",e=>{e.preventDefault();const p=toSvg(e);zoom(e.deltaY>0?1.15:1/1.15,p.x,p.y)},{passive:false});
+$("zown").onclick=()=>{const on=svg.classList.toggle("focus-owned");$("zown").setAttribute("aria-pressed",on)};
 $("zin").onclick=()=>zoom(1/1.3);$("zout").onclick=()=>zoom(1.3);$("zfit").onclick=fit;
 let drag=null;
 svg.addEventListener("pointerdown",e=>{if(drag)return;drag={mode:"pan",sx:e.clientX,sy:e.clientY,vb0:{...vb},moved:false};svg.setPointerCapture(e.pointerId);svg.classList.add("panning")});
