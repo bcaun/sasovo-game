@@ -174,9 +174,19 @@ function showResults(){
    ${rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="num">${r.route}</td><td class="num">+${r.tp}</td><td class="num">−${r.tm}</td>
      <td class="num">${r.ck} → +${r.bCk}</td><td class="num">${r.bm} → +${r.bBm}</td><td class="num">${r.lt} → +${r.bLt}</td><td class="num"><b>${r.total}</b></td></tr>`).join("")}
    </table></div><div class="row"><button class="primary" id="mNew">Новая игра</button><button id="mClose">Посмотреть карту</button></div>`);
-  $("mNew").onclick=()=>{$("modal").hidden=true;newGameClick()};$("mClose").onclick=closeModal;
+  $("mNew").onclick=()=>{$("modal").hidden=true;leaveAndSetup()};$("mClose").onclick=closeModal;
 }
 function newGameClick(){
+  const running=S&&((V&&!V.over)||(S.kind==="online"&&!V));
+  if(running&&$("modal").hidden){
+    openModal(`<h3>Начать новую игру?</h3>
+     <p>${S.kind==="online"?"Вы выйдете из этой комнаты. Вернуться можно будет только по новой ссылке от создателя.":"Текущая партия закончится без подсчёта очков."}</p>
+     <div class="row"><button class="primary" id="ngYes">Да, новая игра</button><button id="ngNo">Продолжить эту</button></div>`);
+    $("ngYes").onclick=()=>{$("modal").hidden=true;leaveAndSetup()};$("ngNo").onclick=closeModal;return;
+  }
+  leaveAndSetup();
+}
+function leaveAndSetup(){
   if(S&&S.kind==="online"){store.del("sasovo:room:"+S.code);S.close()}
   else if(S&&S.close)S.close();
   S=null;V=null;location.hash="";render();showSetup();

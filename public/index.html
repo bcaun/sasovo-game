@@ -42,6 +42,7 @@ h1{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,3vw,28px
 .sub{color:var(--muted);font-size:14px}
 .conn{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 .conn.off{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.newgame{margin-left:auto;align-self:center}
 .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:2px 7px;border-radius:3px;color:var(--muted)}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:14px;align-items:start}
 @media (max-width:980px){.wrap{grid-template-columns:minmax(0,1fr)}}
@@ -240,8 +241,9 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 <header>
   <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.7</span>
+  <span class="tag">v0.7.1</span>
   <span class="conn" id="conn" hidden></span>
+  <button class="primary newgame" id="btnNewTop">Новая игра</button>
 </header>
 
 <div class="wrap">
@@ -1360,9 +1362,19 @@ function showResults(){
    ${rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="num">${r.route}</td><td class="num">+${r.tp}</td><td class="num">−${r.tm}</td>
      <td class="num">${r.ck} → +${r.bCk}</td><td class="num">${r.bm} → +${r.bBm}</td><td class="num">${r.lt} → +${r.bLt}</td><td class="num"><b>${r.total}</b></td></tr>`).join("")}
    </table></div><div class="row"><button class="primary" id="mNew">Новая игра</button><button id="mClose">Посмотреть карту</button></div>`);
-  $("mNew").onclick=()=>{$("modal").hidden=true;newGameClick()};$("mClose").onclick=closeModal;
+  $("mNew").onclick=()=>{$("modal").hidden=true;leaveAndSetup()};$("mClose").onclick=closeModal;
 }
 function newGameClick(){
+  const running=S&&((V&&!V.over)||(S.kind==="online"&&!V));
+  if(running&&$("modal").hidden){
+    openModal(`<h3>Начать новую игру?</h3>
+     <p>${S.kind==="online"?"Вы выйдете из этой комнаты. Вернуться можно будет только по новой ссылке от создателя.":"Текущая партия закончится без подсчёта очков."}</p>
+     <div class="row"><button class="primary" id="ngYes">Да, новая игра</button><button id="ngNo">Продолжить эту</button></div>`);
+    $("ngYes").onclick=()=>{$("modal").hidden=true;leaveAndSetup()};$("ngNo").onclick=closeModal;return;
+  }
+  leaveAndSetup();
+}
+function leaveAndSetup(){
   if(S&&S.kind==="online"){store.del("sasovo:room:"+S.code);S.close()}
   else if(S&&S.close)S.close();
   S=null;V=null;location.hash="";render();showSetup();
@@ -1476,7 +1488,7 @@ $("tBorders").onchange=e=>$("borders").style.display=e.target.checked?"":"none";
 $("tRings").onchange=e=>gRings.style.display=e.target.checked?"":"none";
 $("tLabels").onchange=e=>svg.classList.toggle("nolabels",!e.target.checked);
 $("btnTickets").onclick=takeTicketsAction;
-$("btnNew").onclick=newGameClick;
+$("btnNew").onclick=newGameClick;$("btnNewTop").onclick=newGameClick;
 $("modal").addEventListener("keydown",e=>{if(e.key==="Escape"&&$("pCancel"))closeModal()});
 
 // =====================================================================
