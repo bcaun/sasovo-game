@@ -228,7 +228,7 @@ tracks.forEach(t=>t.cars=Math.max(1,Math.min(6,Math.round(dist(t.a,t.b)/(UNIT*TY
 
 // ---------- правила ----------
 const CARS_PER_PLAYER=45;
-const ROUTE_POINTS=[0,1,2,4,6,9,12];
+const ROUTE_POINTS=[0,1,2,4,7,10,15];
 const EXPRESS_BONUS=2, RING_BONUS=6, LONGEST_BONUS=10;
 const PLAYER_COLORS=["#0e9aa7","#d6336c","#f08c00","#5c4ccf"];
 const TUNNEL_REVEAL=3;
