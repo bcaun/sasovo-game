@@ -220,6 +220,8 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 .trk:hover .car{stroke:var(--mapInk);stroke-width:1.6}
 .trk.on .car{stroke:#ffcc33;stroke-width:2.6}
 .trk.owned .car{stroke:#1b1309;stroke-width:1.6}
+.jamband{fill:none;stroke:url(#jamHatch);stroke-width:15;opacity:.7;stroke-linecap:butt}
+.dim .jamband{opacity:.15}
 .ownband{fill:none;stroke-linecap:round;stroke-width:15;opacity:.55}
 .badge circle{stroke:#fffaf0;stroke-width:1.8}
 .badge text{font-family:var(--font-display);font-weight:700;font-size:9.5px;fill:#fff;pointer-events:none}
@@ -275,7 +277,7 @@ table.res th:first-child,table.res td:first-child{text-align:left}
 <header>
   <h1>Дорога в Сасово</h1>
   <span class="sub">Железнодорожная стратегия · Москва, Рязань, Владимир</span>
-  <span class="tag">v0.9</span>
+  <span class="tag">v1.0</span>
   <span class="conn" id="conn" hidden></span>
   <button class="primary newgame" id="btnNewTop">Новая игра</button>
 </header>
@@ -417,7 +419,7 @@ let resultsShown=false, ticketModalOpen=false;
 const API="/api";
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 
-const canAct=()=>!!V&&V.phase==="play"&&!V.over&&V.me!=null&&V.turn===V.me&&!V.pending&&$("modal").hidden;
+const canAct=()=>!!V&&V.phase==="play"&&!V.over&&V.me!=null&&V.turn===V.me&&!V.pending&&!V.tunnel&&$("modal").hidden;
 const meP=()=>V&&V.me!=null?V.players[V.me]:null;
 
 // ----- анимации -----
@@ -455,6 +457,8 @@ function update(newV,events){
     else if(e.type==="tickets"&&!e.start)toast(p,`берёт маршруты: оставляет ${e.kept} из ${e.offered}`);
     else if(e.type==="draw"&&e.pi!==V.me)toast(p,e.src==="market"&&e.card==="loco"?"берёт тепловоз с рынка":"берёт карты");
     else if(e.type==="final")toast(p,"— последний круг: у всех по одному ходу");
+    else if(e.type==="tunnel"&&e.pi!==V.me){const t=tracks[e.track];toast(p,`пробка на ${cities[t.a].n} — ${cities[t.b].n}: ${e.extra?"доплата "+e.extra:"проехал без доплаты"}`)}
+    else if(e.type==="tunnelFail"){const t=tracks[e.track];toast(p,`застрял в пробке на ${cities[t.a].n} — ${cities[t.b].n}, перегон не построен`);if(e.pi===V.me)haptic("turn")}
     else if(e.type==="ticketDone"&&e.pi===V.me)flash(`Маршрут выполнен: ${e.name} (+${e.pts})`);
   });
   render();
@@ -462,6 +466,7 @@ function update(newV,events){
   afterUpdate(prevOver);
 }
 function afterUpdate(){
+  if(V.tunnel&&V.tunnel.pi===V.me&&$("modal").hidden){showTunnel(V.tunnel);return}
   if(V.over&&V.results&&!resultsShown&&$("modal").hidden){resultsShown=true;showResults();return}
   if(V.pending&&!ticketModalOpen&&$("modal").hidden){showTicketChoice(V.pending);return}
   if(S&&S.afterUpdate)S.afterUpdate();
@@ -601,6 +606,7 @@ function drawGeo(){
    <filter id="paperBlot" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".006" numOctaves="2" seed="3"/>
      <feColorMatrix values="0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .22  0 0 0 .9 -.35"/></filter>
    <radialGradient id="vignette" cx="50%" cy="50%" r="60%"><stop offset="55%" stop-color="#5a4426" stop-opacity="0"/><stop offset="100%" stop-color="#5a4426" stop-opacity=".32"/></radialGradient>
+   <pattern id="jamHatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="#f2b631"/><rect width="5" height="10" fill="#2b2116"/></pattern>
    <pattern id="fieldHatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><line x1="0" y1="0" x2="0" y2="9" stroke="#a48a52" stroke-width="1" opacity=".35"/></pattern>
    <filter id="carShadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx=".7" dy="1.3" stdDeviation=".7" flood-color="#2a1d0c" flood-opacity=".38"/></filter>
    ${[["M",MOSCOW_OBL],["R",RYAZAN_OBL],["V",VLADIMIR_OBL]].map(([k,poly])=>`<clipPath id="clip${k}"><polygon points="${pts(poly)}"/></clipPath>`).join("")}`;
@@ -678,6 +684,7 @@ function drawRoutes(){
     const A=cities[t.a],B=cities[t.b],dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=-uy,ny=ux;
     const n=t.cars,off=t.lane*OFF,sx=A.x+ux*R+nx*off,sy=A.y+uy*R+ny*off,len=L-2*R,cl=(len-GAP*(n+1))/n,ang=Math.atan2(dy,dx)*180/Math.PI;
     if(t.type==="exp"||t.type==="main")el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"casing "+(t.type==="exp"?"express":"main"),"stroke-width":17},gCas);
+    if(t.tunnel)el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"jamband"},gCas);
     const own=V?V.owner[t.id]:undefined;
     const fresh=freshTrack.id===t.id&&Date.now()-freshTrack.ts<1600;
     if(own!==undefined)el("line",{x1:sx,y1:sy,x2:sx+ux*len,y2:sy+uy*len,class:"ownband"+(fresh?" fresh":""),stroke:V.players[own].color},gCas);
@@ -697,7 +704,7 @@ function drawRoutes(){
     if(own!==undefined){const q=V.players[own],mx=sx+ux*len/2,my=sy+uy*len/2,b=el("g",{class:"badge",transform:`translate(${mx.toFixed(1)} ${my.toFixed(1)})`},g);
       el("circle",{r:7.5,fill:q.color},b);el("text",{y:3.4,"text-anchor":"middle"},b).textContent=q.name.trim().charAt(0).toUpperCase()}
     g.addEventListener("pointerenter",e=>{if(e.pointerType!=="mouse")return;
-      const extra=t.type==="exp"?` · платите ${cardCost(t)} карт`:"";
+      const extra=(t.type==="exp"?` · платите ${cardCost(t)} карт`:"")+(t.tunnel?" · пробка: возможна доплата до 3 карт":"");
       const who=own!==undefined?` · занят: ${V.players[own].name}`:cls.includes("blocked")?" · закрыт (второй путь уже занят)":"";
       showTip(e,`${A.n} — ${B.n} · ${n} ваг. · ${COLORS[t.color][1]} · ${TYPES[t.type].name}${extra} · ${trackPoints(t)} оч.${who}`)});
     g.addEventListener("pointermove",moveTip);g.addEventListener("pointerleave",hideTip);
@@ -798,6 +805,7 @@ function render(){
   else if(V.me==null)st=p.bot?"Ходит бот…":`Передайте устройство: ходит ${p.name}.`;
   else if(V.turn!==V.me)st=p.bot?`Ходит ${/^бот/i.test(p.name)?"":"бот "}${p.name}…`:`Ходит ${p.name}. Ждём его хода.`;
   else if(V.pending)st="Выберите маршруты.";
+  else if(V.tunnel)st="Пробка: решите, доплатить ли карты.";
   else if(V.drawn===1)st="Возьмите вторую карту: из колоды или с рынка (кроме тепловоза).";
   else st="Возьмите 2 карты, постройте перегон (подсвечены доступные) или возьмите маршруты.";
   if(V.finalLeft!==null&&!V.over)st+=` Последний круг: ходов осталось ${V.finalLeft}.`;
@@ -959,10 +967,25 @@ function showPay(t){
   const label=o=>{const parts=[];if(o.use)parts.push(`${o.use} × ${COLORS[o.c][1]}`);if(o.loco)parts.push(`${o.loco} × тепловоз`);return parts.join(" + ")};
   openModal(`<h3>${esc(A.n)} — ${esc(B.n)}</h3>
    <p>${t.cars} ваг. · ${TYPES[t.type].name} · ${trackPoints(t)} очков. ${t.type==="exp"?`Скоростная: нужно ${cardCost(t)} карт, ставите ${t.cars} вагонов.`:""} ${t.color==="gray"?"Подходят карты любого одного цвета.":""}</p>
+   ${t.tunnel?`<p><b>Пробка.</b> После оплаты из колоды откроются ${Core.TUNNEL_REVEAL} карты. За каждую карту цвета, которым вы платите, и за каждый тепловоз нужно доплатить ещё одну карту. Можно отказаться: тогда карты останутся у вас, но ход пропадёт. Возьмите запас.</p>`:""}
    <div class="paybtns">${opts.map((o,i)=>`<button data-p="${i}"><em style="background:${o.c==="loco"?"#999":COLORS[o.c][0]}"></em>${label(o)}</button>`).join("")}</div>
    <div class="row"><button id="pCancel">Отмена</button></div>`);
   $("dialog").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{$("modal").hidden=true;S.send({type:"claim",track:t.id,opt:+b.dataset.p})});
   $("pCancel").onclick=closeModal;
+}
+function showTunnel(T){
+  const t=tracks[T.track],me=meP(),A=cities[t.a],B=cities[t.b];
+  const freeColor=T.payColor?me.hand[T.payColor]-T.opt.use:0,freeLoco=me.hand.loco-T.opt.loco;
+  const can=Math.max(freeColor,0)+freeLoco>=T.extra,xc=Math.min(Math.max(freeColor,0),T.extra),xl=T.extra-xc;
+  const what=[xc?`${xc} × ${COLORS[T.payColor][1]}`:"",xl?`${xl} × тепловоз`:""].filter(Boolean).join(" + ");
+  openModal(`<h3>Пробка: ${esc(A.n)} — ${esc(B.n)}</h3>
+   <p>Из колоды открылись карты. ${T.payColor?`Совпадают карты цвета «${COLORS[T.payColor][1]}» и тепловозы`:"Вы платите тепловозами, поэтому совпадают только тепловозы"}.</p>
+   <div class="cards">${T.revealed.map(c=>cardHTML(c,null,'tabindex="-1"')).join("")}</div>
+   <p>Нужно доплатить: <b>${T.extra}</b> ${T.extra===1?"карту":"карты"}.</p>
+   <div class="row">${can?`<button class="primary" id="tPay">Доплатить: ${what}</button>`:""}<button id="tNo">Отказаться</button></div>`);
+  $("dialog").querySelectorAll(".card").forEach(b=>b.classList.add("static"));
+  if($("tPay"))$("tPay").onclick=()=>{$("modal").hidden=true;S.send({type:"tunnel",pay:true})};
+  $("tNo").onclick=()=>{$("modal").hidden=true;S.send({type:"tunnel",pay:false})};
 }
 function showResults(){
   const rows=V.results;
@@ -1013,6 +1036,7 @@ function renderMapTab(){
     [sw(`<line x1="0" y1="8" x2="42" y2="8" stroke="var(--bmo)" stroke-width="14" stroke-dasharray="2.5 5" opacity=".6"/>`),"Большое бетонное кольцо"],
     [sw(`<circle cx="21" cy="8" r="7" fill="none" stroke="var(--ckad)" stroke-width="2.5"/><circle cx="21" cy="8" r="3.6" fill="var(--city)" stroke="var(--cityRing)" stroke-width="1.6"/>`),"Станция на ЦКАД"],
     [sw(`<circle cx="21" cy="8" r="5" fill="var(--panel)" stroke="var(--cityRing)" stroke-width="1.6" stroke-dasharray="3 2"/>`),"Вылетное направление за край карты"],
+    [sw(`<defs><pattern id="lgJam" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#f2b631"/><rect width="3" height="6" fill="#2b2116"/></pattern></defs><rect x="0" y="2" width="42" height="12" fill="url(#lgJam)" opacity=".75"/>${cars(5,"#3a74c4")}`),"Пробка: при постройке возможна доплата"],
   ].map(([s,t])=>`${s}<span>${t}</span>`).join("");
   const total=tracks.reduce((a,t)=>a+t.cars,0);
   $("stats").innerHTML=`<div><b class="num">${Object.values(cities).filter(c=>!c.exit).length}</b><span>городов</span></div><div><b class="num">${tracks.length}</b><span>путей</span></div><div><b class="num">${total}</b><span>вагонов на карте</span></div>`;
@@ -1028,7 +1052,8 @@ function renderRules(){
   <h4>Особые пути</h4><ul>
    <li><b>Скоростная линия</b> (Москва — Ногинск — Орехово-Зуево — Владимир): платите на 1 карту больше, чем ставите вагонов, и получаете +${EXPRESS_BONUS} очка.</li>
    <li><b>Двойной перегон</b>: один игрок не может занять оба пути. При 2–3 игроках второй путь закрывается после первой постройки.</li>
-   <li><b>Вылетные направления</b> (на Пензу, Нижний Новгород, Дивеево) работают как города на краю карты.</li></ul>
+   <li><b>Вылетные направления</b> (на Пензу, Нижний Новгород, Дивеево) работают как города на краю карты.</li>
+   <li><b>Пробки</b> (жёлто-чёрная штриховка: Москва — Люберцы, Люберцы — Раменское, Москва — Домодедово, Москва — Одинцово, Истра — Клин, Михнево — Кашира, Луховицы — Рязань, Спас-Клепики — Тума, Шатура — Гусь-Хрустальный): заплатите за перегон, затем откройте 3 карты из колоды. За каждую карту вашего цвета и каждый тепловоз доплатите ещё одну карту. Не можете или не хотите — перегон не строится, карты остаются у вас, ход пропадает. Открытые карты уходят в сброс.</li></ul>
   <h4>Очки за перегон</h4><p class="num">${[1,2,3,4,5,6].map(n=>`${n} ваг. — ${ROUTE_POINTS[n]}`).join(" · ")}</p>
   <h4>Конец игры</h4><ul><li>Когда у игрока остаётся 2 вагона или меньше, каждый делает ещё один ход.</li>
    <li>Выполненные билеты прибавляются, невыполненные вычитаются.</li>

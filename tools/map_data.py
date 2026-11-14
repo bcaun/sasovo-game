@@ -61,3 +61,10 @@ ROUTES=[
  ["sar","shat",["purple"]],["kir","sap",["gray"]],
  ["shil","eka",["gray"]],["shil","kas",["yellow"]],["kas","erm",["white"]],["erm","kad",["gray"]],["sas","gly",["orange"]],["gly","kad",["gray"]],["eka","chu",["blue"]],["chu","sas",["green"]],["shat","pnz",["white"]],["mur","nn",["red"]],["erm","div",["purple"]],
 ]
+
+# Пробки: перегоны, где в жизни постоянно стоят. При постройке открываются 3 карты из колоды,
+# за каждую карту цвета оплаты или тепловоз нужно доплатить ещё одну.
+TUNNELS = [
+ ["msk", "lyu"], ["lyu", "ram"], ["msk", "dom"], ["msk", "odi"], ["ist", "klin"],
+ ["mihn", "kash"], ["luh", "rya"], ["spk", "tuma"], ["sha", "gus"],
+]

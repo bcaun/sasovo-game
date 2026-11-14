@@ -17,6 +17,7 @@ data = ("const CITY_DATA=[\n" + ",\n".join(" " + js(c) for c in ns["CITIES"]) + 
         "// ручные сдвиги (px), чтобы линии не пересекались и не задевали города\n"
         "const NUDGE=" + js(ns["NUDGE"]) + ";\n"
         "const ROUTE_DATA=[\n" + ",\n".join(" " + js(r) for r in routes) + "\n];\n"
+        "const TUNNELS=" + js(ns["TUNNELS"]) + ";\n"
         "const TICKET_DATA=" + json.dumps(json.load(open(os.path.join(HERE, "tickets.json"), encoding="utf8")), ensure_ascii=False) + ";")
 core = open(os.path.join(HERE, "core.js"), encoding="utf8").read().replace("/*@DATA@*/", data)
 os.makedirs(os.path.join(ROOT, "server"), exist_ok=True)
